@@ -26,7 +26,8 @@ import json
 from time import time,asctime
 import datetime
 
-from ants import Ants
+#from ants import Ants
+from wargame import Wargame
 from engine import run_game
 
 import game_db
@@ -69,7 +70,7 @@ def load_map_info():
 				if line.startswith('rows'):		r = int(line.split()[1])
 				if line.startswith('cols'):		c = int(line.split()[1])
 			mf.close()
-			maps[filename] = [p,r,c,0]
+			maps[filename] = [p,1,1,0]
 	return maps
 
 
@@ -195,7 +196,7 @@ class TcpGame(threading.Thread):
         self.map_name = map_name
         self.nplayers = nplayers
         self.bots=[]
-        self.ants = Ants(opts)
+        self.wargame = Wargame(opts)
         
     def __del__(self):
         #~ print "__del__", self.id, self       
@@ -210,7 +211,7 @@ class TcpGame(threading.Thread):
             p.write( "INFO: game " + str(self.id) + " " + str(self.map_name) + " : " + str(self.players) + "\n" )
         
         # finally, THE GAME !
-        game_result = run_game(self.ants, self.bots, self.opts)
+        game_result = run_game(self.wargame, self.bots, self.opts)
 
         ## don't need the client threads any more, so we can kill them now
         for i,b in enumerate(self.bots):
@@ -222,7 +223,7 @@ class TcpGame(threading.Thread):
         except: 
             log.error("broken game %d: %s" % (self.id,game_result) )
             return
-        if self.ants.turn < 1:
+        if self.wargame.turn < 1:
             log.error("broken game %d (0 turns)" % (self.id) )
             return
         scores = game_result["score"]
@@ -255,7 +256,7 @@ class TcpGame(threading.Thread):
                 status += " (rank %d, skill %2.2f)" % (res[0][4],res[0][5]) 
             plr[p] = (scores[i], status)
             db.update("insert into gameindex values(?,?,?)",(None,p,self.id))
-        db.add_game( self.id, self.map_name, self.ants.turn, draws,json.dumps(plr) )
+        db.add_game( self.id, self.map_name, self.wargame.turn, draws,json.dumps(plr) )
                 
         # update trueskill
         if self.opts['trueskill'] == 'jskills':
@@ -274,7 +275,7 @@ class TcpGame(threading.Thread):
         ds = time() - starttime
         mins = int(ds / 60)
         secs = ds - mins*60
-        log.info("saved game %d : %d turns %dm %2.2fs" % (self.id,self.ants.turn,mins,secs) )
+        log.info("saved game %d : %d turns %dm %2.2fs" % (self.id,self.wargame.turn,mins,secs) )
         log.info("players: %s" % self.players)
         log.info("ranks  : %s   %s draws" % (ranks, draws) )
         log.info("scores : %s" % scores)

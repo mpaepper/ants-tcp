@@ -4,8 +4,9 @@
  * @author <a href="mailto:marco.leise@gmx.de">Marco Leise</a>
  */
 
+$import('Wargame');
 $import('Util');
-$import('Ant');
+//$import('Ant');
 $import('Application');
 $import('Buttons');
 $import('Config');
@@ -14,6 +15,7 @@ $import('Director');
 $import('ImageManager');
 $import('Replay');
 $import('CanvasElement');
+
 
 var $import_base;
 
