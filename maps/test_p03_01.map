@@ -1,0 +1,15 @@
+#
+# test_p03_01.map
+#
+# Three ships flying parallel to eachother.
+#
+width 256
+height 256
+# p player-id x y heading speed
+p 0  42.0  16.0 1.57080 10.0
+p 1 127.0  16.0 1.57080 10.0
+p 2 212.0  16.0 1.57080 10.0
+# a category x y heading speed
+a 2  42.0 212.0 4.71239  4.0
+a 2 127.0 212.0 4.71239  4.0
+a 2 212.0 212.0 4.71239  4.0
