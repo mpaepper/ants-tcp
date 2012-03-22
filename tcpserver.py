@@ -65,8 +65,9 @@ def load_map_info():
 	for root,dirs,filenames in os.walk("maps"):
 		for filename in filenames:
 			mf = open("maps/"+filename,"r")
+			p = 0
 			for line in mf:
-				if line.startswith('players'):	p = int(line.split()[1])
+				if line.startswith('p'):	p = max(p, int(line.split()[1]) + 1)
 				if line.startswith('rows'):		r = int(line.split()[1])
 				if line.startswith('cols'):		c = int(line.split()[1])
 			mf.close()
@@ -453,12 +454,13 @@ class TCPGameServer(object):
         map_name = os.path.join( 'maps', base_name )
         data = ""
         f = open(map_name, 'r')
+        p = 0
         for line in f:
             data += line
-            if line.startswith('players'):
-                nplayers = line.split()[1]
+            if line.startswith('p'):
+                nplayers = max (p, int (line.split()[1]) + 1)
         f.close()
-        return base_name, data, int(nplayers)
+        return base_name, data, nplayers
         
     
     def create_game(self):
