@@ -528,7 +528,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Here's how to play a game on TCP...<br>
         <ol>
         <li>Download the <b><a href='/tcpclient.py'> Python client </a></b>,it proxies input/output of your bot to game manager on server</li>
-        <li>Run:<b> python tcpclient.py %s 2081 "python MyBot.py" username password [num_rounds] </b></li>
+        <li>Run:<b> python tcpclient.py %s 6031 "python MyBot.py" username password [num_rounds] </b></li>
         <li>Change the game runner to fit your bot.</li>
         <li>Change choose unique username and password pair.</li>
         <li>See your rank in the ranking page.</li>
@@ -589,7 +589,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
  
 def main():
 
-    web_port = 2080
+    web_port = 6030
     opts = {
         ## web opts:
         'sort': 'True',			# include tablesorter & jquery and have sortable tables(requires ~70kb additional download)
