@@ -259,27 +259,29 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			V.fillText(info, 260,10)
 			for (i in frame) {
 				var index = frame[i][1];
-				if (frame[i][0] == 't'){
-					index = frame[i][5];
-					img = frame[i][1] + ":"
-					if (index > 7)
-						{index = 8;
-						img += "n:"}
-					else img += frame[i][5] + ":";
-					V.fillStyle = color[index]
-					V.strokeStyle = 'white'
-					img += frame[i][6]
-					x = frame[i][3] * sx
-					y = frame[i][4] * sy
-					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
-					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
-					r = 5
-					V.fillText(img, x,y)
-					V.beginPath();
-					V.arc(x,y, r*sx,begin_arc,end_arc,true);
-					V.closePath();
-					V.stroke();
-					}
+				if (frame[i][0] == 'a')
+					index = 8;
+				V.fillStyle = color[index]
+				V.strokeStyle = color[index]
+				img = frame[i][0] + frame[i][1]
+				x = frame[i][2] * sx
+				y = frame[i][3] * sy
+				a = frame[i][4]
+				end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
+				begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
+	
+				r = (frame[i][0]=="b" ? 2 :(frame[i][0]=="p" ? 5 : (frame[i][1]+1)*(frame[i][1]+1)))
+				//~ V.rotate(r)
+				//~ V.translate(x,y)
+				V.fillText(img, x,y)
+				V.beginPath();
+				V.arc(x,y, r*sx,begin_arc,end_arc,true);
+				V.closePath();
+				V.stroke();
+				//~ V.translate(-x,-y)
+				//~ if ( im[img] && im[img].data )
+					//~ V.drawImage(im[img], x,y)
+				//~ V.rotate(-r)
 			}
 		}
         function stop() {
