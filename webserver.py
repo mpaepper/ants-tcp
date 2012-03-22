@@ -186,7 +186,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         html = """
             <html>
             <head>
-	<title>Wargame visualizer</title>
+	<title>Asteroids visualizer</title>
 	<style type="text/css">
 		html { margin:0; padding:0; }
 		body { margin:0; padding:0; overflow:hidden; background-color:#444}
@@ -530,7 +530,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Here's how to play a game on TCP...<br>
         <ol>
         <li>Download the <b><a href='/tcpclient.py'> Python client </a></b>,it proxies input/output of your bot to game manager on server</li>
-        <li>Run:<b> python tcpclient.py %s 2081 "python MyBot.py" username password [num_rounds] </b></li>
+        <li>Run:<b> python tcpclient.py %s 6021 "python MyBot.py" username password [num_rounds] </b></li>
         <li>Change the game runner to fit your bot.</li>
         <li>Change choose unique username and password pair.</li>
         <li>See your rank in the ranking page.</li>
@@ -591,7 +591,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
  
 def main():
 
-    web_port = 2080
+    web_port = 6020
     opts = {
         ## web opts:
         'sort': 'True',			# include tablesorter & jquery and have sortable tables(requires ~70kb additional download)

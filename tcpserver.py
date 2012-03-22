@@ -595,7 +595,7 @@ class TCPGameServer(object):
 
 def main():
 
-    tcp_port = 2081
+    tcp_port = 6021
 
     opts = {
         ## ants/engine opts:  (see http://aichallenge.org/game_settings.php)
