@@ -357,7 +357,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def serve_map( self, match ):      
         try:
             mapname = match.group(0).split('/')[2]
-            m = self.server.cache["/maps/"+mapname]
+            m = self.server.cache["/ants-maps/"+mapname]
         except:
             self.send_error(404, 'Map Not Found: %s' % self.path)
             return

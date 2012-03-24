@@ -63,7 +63,7 @@ def load_map_info():
 	maps={}
 	for root,dirs,filenames in os.walk("maps"):
 		for filename in filenames:
-			mf = open("maps/"+filename,"r")
+			mf = open("ants-maps/"+filename,"r")
 			for line in mf:
 				if line.startswith('players'):	p = int(line.split()[1])
 				if line.startswith('rows'):		r = int(line.split()[1])

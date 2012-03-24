@@ -1788,7 +1788,7 @@ def test_symmetry():
     import sys
     import visualizer.visualize_locally
     if len(sys.argv) < 2:
-        map_file_name = 'maps/test_maps/sym_test_2.map'
+        map_file_name = 'ants-maps/test_maps/sym_test_2.map'
     else:
         map_file_name = sys.argv[1]
     with open(map_file_name, 'r') as f:
