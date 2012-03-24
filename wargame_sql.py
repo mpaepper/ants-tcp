@@ -10,7 +10,7 @@
 import sqlite3
 import zlib
 
-con = sqlite3.connect("antsdb.sqlite3")
+con = sqlite3.connect("wargamedb.sqlite3")
 con.isolation_level = None
 cur = con.cursor()
 

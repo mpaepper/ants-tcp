@@ -7,7 +7,7 @@ import zlib
 
 class GameDB():
 	
-	def __init__( self, file="antsdb.sqlite3" ):
+	def __init__( self, file="wargamedb.sqlite3" ):
 		self.con = sqlite3.connect(file);
 		self.recreate()
 		

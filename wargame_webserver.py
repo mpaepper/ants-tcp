@@ -9,8 +9,8 @@ import time
 import SimpleHTTPServer
 import socket
 
-import game_db
-from tcpserver import load_map_info
+import wargame_db
+from wargame_tcpserver import load_map_info
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
@@ -99,7 +99,7 @@ class AntsHttpServer(HTTPServer):
         self.cache_dir("data/img")
         
         self.maps = load_map_info()
-        self.db = game_db.GameDB()
+        self.db = wargame_db.GameDB()
         
         HTTPServer.__init__(self, *args)
 
