@@ -29,7 +29,7 @@ import datetime
 from ants import Ants
 from engine import run_game
 
-import game_db
+import ants_game_db
 
 
 # create console handler and set level to debug
@@ -243,7 +243,7 @@ class TcpGame(threading.Thread):
             game_result['playernames'].append(p)        
         
         # save to db
-        db = game_db.GameDB()
+        db = ants_game_db.GameDB()
         data = json.dumps(game_result)
         db.add_replay( self.id, data )
         
@@ -497,7 +497,7 @@ class TCPGameServer(object):
     
     def serve(self):
         # have to create the game before collecting respective num of players:
-        self.db = game_db.GameDB()
+        self.db = ants_game_db.GameDB()
         try:
             self.latest = int(self.db.retrieve("select id from games order by id desc limit 1;",())[0][0])
         except:
