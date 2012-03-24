@@ -1,6 +1,7 @@
 -- Update --
 
 The three forks (Ants, Asteroids and Wargame) have been combined into one.
+This is experimental.
 
 A few starter packages for asteroids can be found here:
 
