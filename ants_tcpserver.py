@@ -61,7 +61,7 @@ book = Bookkeeper()
 
 def load_map_info():
 	maps={}
-	for root,dirs,filenames in os.walk("maps"):
+	for root,dirs,filenames in os.walk("ants-maps"):
 		for filename in filenames:
 			mf = open("ants-maps/"+filename,"r")
 			for line in mf:
@@ -449,7 +449,7 @@ class TCPGameServer(object):
             base_name = random.choice( self.maps.keys() )
         self.maps[base_name][3] += 1
         
-        map_name = os.path.join( 'maps', base_name )
+        map_name = os.path.join( 'ants-maps', base_name )
         data = ""
         f = open(map_name, 'r')
         for line in f:

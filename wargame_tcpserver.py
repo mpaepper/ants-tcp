@@ -62,7 +62,7 @@ book = Bookkeeper()
 
 def load_map_info():
 	maps={}
-	for root,dirs,filenames in os.walk("maps"):
+	for root,dirs,filenames in os.walk("wargame-maps"):
 		for filename in filenames:
 			mf = open("wargame-maps/"+filename,"r")
 			for line in mf:
@@ -450,7 +450,7 @@ class TCPGameServer(object):
             base_name = random.choice( self.maps.keys() )
         self.maps[base_name][3] += 1
         
-        map_name = os.path.join( 'maps', base_name )
+        map_name = os.path.join( 'wargame-maps', base_name )
         data = ""
         f = open(map_name, 'r')
         for line in f:
