@@ -64,7 +64,7 @@ def load_map_info():
 	maps={}
 	for root,dirs,filenames in os.walk("maps"):
 		for filename in filenames:
-			mf = open("maps/"+filename,"r")
+			mf = open("asteroids-maps/"+filename,"r")
 			p = 0
 			for line in mf:
 				if line.startswith('p'):	p = max(p, int(line.split()[1]) + 1)
