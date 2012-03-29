@@ -1,9 +1,11 @@
 -- Update --
 
-This fork has three branches:
- - master: exactly the same as berak's ants-tcp except for this readme
+The branches have been combined into combine-better. The master branch should track this branch for now.
+
+The three games offered are:
+ - ants: more or less the same as berak's ants-tcp
  - asteroids: modified to use the proposed asteroids game
- - wargame: modified to use the (incomplete) risk-like game
+ - wargame: modified to use the proposed risk-like game
 
 A few starter packages for asteroids can be found here:
 
@@ -13,15 +15,11 @@ An ocaml starter for wargame can be found here:
 
 https://github.com/smiley1983/aichallenge/tree/war/wargame/dist/starter_bots
 
-You can download all three server packages here:
-
-https://github.com/smiley1983/ants-tcp/tags
-
 currently configured like so: 
 
 Ants: ports 2080 and 2081
-Asteroids: 6020 and 6021
-Wargame: 6030 and 6031
+Asteroids: 2082 and 2083
+Wargame: 2084 and 2085
 
 
 
