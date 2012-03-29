@@ -33,6 +33,8 @@ class Wargame(Game):
 
         map_data = self.parse_map(map_text)
 
+        self.group_count = self.count_groups(map_data)
+
         self.turn = 0
         self.min_income = 5	#FIXME
         self.base_unit = 1000	#FIXME tell the player, maybe add to map
@@ -101,6 +103,32 @@ class Wargame(Game):
         
         ### collect turns for the replay
         self.replay_data = []
+
+    def count_groups(self, map_data):
+        group = dict()
+        for t in map_data['territories']:
+            try:
+                group[t['group']] += 1
+            except:
+                group[t['group']] = 1
+        return group
+
+    def player_groups(self, player):
+        pgroup = dict()
+        for t in self.territory:
+            if t['owner'] == player['player_id']:
+                try:
+                    pgroup[t['group']] += 1
+                except:
+                    pgroup[t['group']] = 1
+        return pgroup
+
+    def complete_groups(self, player_group):
+        result = 0
+        for group_id, value in player_group.items():
+            if self.group_count[group_id] == value and value > 0:
+                result += 1
+        return result
 
     def parse_map(self, map_text):
         """ Parse the map_text into a more friendly data structure """
@@ -493,7 +521,8 @@ class Wargame(Game):
     def add_army_income(self, player):
         terri = self.count_territories(player["player_id"])
         income = max(self.min_income, int(terri / 3))
-        player["armies_to_place"] += income * self.base_unit
+        bonus = self.complete_groups(self.player_groups(player))
+        player["armies_to_place"] += (income + bonus) * self.base_unit
 
     def begin_player_turn(self, player):
         player["processed_this_turn"] = False

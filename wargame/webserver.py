@@ -9,8 +9,8 @@ import time
 import SimpleHTTPServer
 import socket
 
-import game_db
-from tcpserver import load_map_info
+import wargame_db
+from wargame_tcpserver import load_map_info
 
 # create console handler and set level to debug
 ch = logging.StreamHandler()
@@ -95,11 +95,11 @@ class AntsHttpServer(HTTPServer):
         self.cache_file("/tcpclient.py", "clients/tcpclient.py")
         #~ self.cache_file("/tcpclient.py3", "clients/tcpclient.py3")
         self.cache_dir("js")
-        self.cache_dir("maps")
+        self.cache_dir("wargame-maps")
         self.cache_dir("data/img")
         
         self.maps = load_map_info()
-        self.db = game_db.GameDB()
+        self.db = wargame_db.GameDB()
         
         HTTPServer.__init__(self, *args)
 
@@ -154,7 +154,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         <b>
         <a href='/' name=top> Games </a> &nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/ranking'> Rankings </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <a href='/maps'> Maps </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href='/wargame-maps'> Maps </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/howto' title='get a client and connect to the game'> HowTo </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </b>
         <input name=name title='search for player'></form>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -260,6 +260,11 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			for (i in frame) {
 				var index = frame[i][1];
 				if (frame[i][0] == 't'){
+					group = frame[i][2];
+					if (group > 7)
+						group = 0;
+					else
+						group = 7 - group;
 					index = frame[i][5];
 					img = frame[i][1] + ":"
 					if (index > 7)
@@ -279,6 +284,13 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					V.arc(x,y, r*sx,begin_arc,end_arc,true);
 					V.closePath();
 					V.stroke();
+					V.beginPath();
+					V.fillStyle = color[group];
+					V.strokeStyle = color[group];
+					V.arc(x-sx,y-sx, sx, begin_arc, end_arc,true);
+					V.closePath();
+					V.stroke();
+
 					}
 			}
 		}
@@ -481,7 +493,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def serve_map( self, match ):      
         try:
             mapname = match.group(0).split('/')[2]
-            m = self.server.cache["/maps/"+mapname]
+            m = self.server.cache["/wargame-maps/"+mapname]
         except:
             self.send_error(404, 'Map Not Found: %s' % self.path)
             return
