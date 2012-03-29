@@ -1,0 +1,13 @@
+#
+# test_p02_02.map
+#
+# Moving asteroids at last!
+#
+width 256
+height 256
+# p player-id x y heading speed
+p 0 187.0 31.0 1.57080 0.0
+p 1  67.0 31.0 1.57080 0.0
+# a category x y heading speed
+a 4 127.0  95.0 6.732 1.0
+a 3 127.0 159.0 2.356 1.2
