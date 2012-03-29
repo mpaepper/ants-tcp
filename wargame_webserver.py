@@ -260,6 +260,11 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			for (i in frame) {
 				var index = frame[i][1];
 				if (frame[i][0] == 't'){
+					group = frame[i][2];
+					if (group > 7)
+						group = 0;
+					else
+						group = 7 - group;
 					index = frame[i][5];
 					img = frame[i][1] + ":"
 					if (index > 7)
@@ -279,6 +284,13 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					V.arc(x,y, r*sx,begin_arc,end_arc,true);
 					V.closePath();
 					V.stroke();
+					V.beginPath();
+					V.fillStyle = color[group];
+					V.strokeStyle = color[group];
+					V.arc(x-sx,y-sx, sx, begin_arc, end_arc,true);
+					V.closePath();
+					V.stroke();
+
 					}
 			}
 		}
