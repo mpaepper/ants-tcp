@@ -331,8 +331,19 @@ class Asteroids(Game):
             bullet_dy = impetus * sin(ihead)
             bullet_x_speed = ship["current_speed"][0] + bullet_dx
             bullet_y_speed = ship["current_speed"][1] + bullet_dy
-            bullet_heading = atan(bullet_y_speed / bullet_x_speed)
-            bullet_speed = bullet_y_speed / sin(bullet_heading)
+            try:
+                bullet_heading = atan(bullet_y_speed / bullet_x_speed)
+            except:
+                if bullet_y_speed < 0:
+                    bullet_heading = (-pi) / 2
+                elif bullet_y_speed > 0:
+                    bullet_heading = pi / 2
+                else:
+                    bullet_heading = 0
+            try:
+                bullet_speed = bullet_y_speed / sin(bullet_heading)
+            except:
+                bullet_speed = bullet_y_speed
             bullet = { "owner": player,
                        "x": ship["x"],
                        "y": ship["y"],
