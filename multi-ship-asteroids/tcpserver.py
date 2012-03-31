@@ -67,7 +67,7 @@ def load_map_info():
 			mf = open("maps/"+filename,"r")
 			p = 0
 			for line in mf:
-				if line.startswith('p'):	p = max(p, int(line.split()[1]) + 1)
+				if line.startswith('s'):	p = max(p, int(line.split()[1]) + 1)
 				if line.startswith('rows'):		r = int(line.split()[1])
 				if line.startswith('cols'):		c = int(line.split()[1])
 			mf.close()
@@ -457,8 +457,8 @@ class TCPGameServer(object):
         p = 0
         for line in f:
             data += line
-            if line.startswith('p'):
-                nplayers = max (p, int (line.split()[1]) + 1)
+            if line.startswith('players'):
+                nplayers = int(line.split()[1])
         f.close()
         return base_name, data, nplayers
         
