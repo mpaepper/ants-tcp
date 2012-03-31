@@ -6,10 +6,11 @@
 #
 width 256
 height 256
-# p player-id x y heading speed
-p 0 191.0 135.0 0.0     0.0
-p 1 119.0 191.0 1.57080 0.0
-p 2  63.0 119.0 3.14159 0.0
-p 3 135.0  63.0 4.71239 0.0
+players 4
+# s ship_id x y heading speed owner
+s 0 191.0 135.0 0.0     0.0 0
+s 1 119.0 191.0 1.57080 0.0 1
+s 2  63.0 119.0 3.14159 0.0 2
+s 3 135.0  63.0 4.71239 0.0 3
 # a category x y heading speed
 a 5 127.0 127.0 0.0     0.0
