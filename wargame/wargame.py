@@ -203,11 +203,11 @@ class Wargame(Game):
             ['p', p["player_id"], p["armies_to_place"]]
             for p in self.players if self.is_alive(p["player_id"])))
         changes.extend(sorted(
-            ['c', c["a"], c["b"]]
-            for c in self.connection))
-        changes.extend(sorted(
             ['t', t["territory_id"], t["group"], t["x"], t["y"], t["owner"], t["armies"]]
             for t in self.territory))
+        changes.extend(sorted(
+            ['c', c["a"], c["b"]]
+            for c in self.connection))
 #        result.extend(sorted(
 #            ['c', c["a"], c["b"]]
 #            for c in self.connection))
