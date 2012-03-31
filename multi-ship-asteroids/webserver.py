@@ -199,8 +199,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 <center>
 <canvas width=600 height=600 id="C">
 	<script type="text/javascript">
-		replay_data = ## REPLAY PLACEHOLDER ##;
-		
+                replay_data = """ + replaydata + """;
 		//~ im = {
 			//~ "p0" : "visualizer/p0.png",
 			//~ "p1" : "visualizer/p1.png",
