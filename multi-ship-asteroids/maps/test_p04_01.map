@@ -1,0 +1,15 @@
+#
+# test_p04_01.map
+#
+# Four ships centered in the middle of the map pointing away from each other
+# towards the four cardinal directions.
+#
+width 256
+height 256
+# p player-id x y heading speed
+p 0 191.0 135.0 0.0     0.0
+p 1 119.0 191.0 1.57080 0.0
+p 2  63.0 119.0 3.14159 0.0
+p 3 135.0  63.0 4.71239 0.0
+# a category x y heading speed
+a 5 127.0 127.0 0.0     0.0
