@@ -284,12 +284,12 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				if (frame[i][0]=="s")
 					{heading = frame[i][4];
 					wing = (145 * Math.PI / 180);
-					p1x = x + r * Math.cos(heading);
-					p1y = y + r * Math.sin(heading);
-					p2x = x + r * Math.cos(heading + wing);
-					p2y = y + r * Math.sin(heading + wing);
-					p3x = x + r * Math.cos(heading - wing);
-					p3y = y + r * Math.sin(heading - wing);
+					p1x = x + r * sx * Math.cos(heading);
+					p1y = y + r * sy * Math.sin(heading);
+					p2x = x + r * sx * Math.cos(heading + wing);
+					p2y = y + r * sy * Math.sin(heading + wing);
+					p3x = x + r * sx * Math.cos(heading - wing);
+					p3y = y + r * sy * Math.sin(heading - wing);
 					V.beginPath();
 					V.strokeStyle = color[8]
 					V.moveTo(p1x, p1y);
