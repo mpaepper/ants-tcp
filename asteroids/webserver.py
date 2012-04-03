@@ -278,6 +278,27 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				V.arc(x,y, r*sx,begin_arc,end_arc,true);
 				V.closePath();
 				V.stroke();
+                                if (frame[i][0]=="s")
+                                        {heading = frame[i][4];
+                                        wing = (145 * Math.PI / 180);
+                                        p1x = x + r * sx * Math.cos(heading);
+                                        p1y = y + r * sy * Math.sin(heading);
+                                        p2x = x + r * sx * Math.cos(heading + wing);
+                                        p2y = y + r * sy * Math.sin(heading + wing);
+                                        p3x = x + r * sx * Math.cos(heading - wing);
+                                        p3y = y + r * sy * Math.sin(heading - wing);
+                                        p4x = x + (r / 2) * sx * Math.cos(heading - Math.PI);
+                                        p4y = y + (r / 2) * sy * Math.sin(heading - Math.PI);
+                                        V.beginPath();
+                                        V.strokeStyle = color[8]
+                                        V.moveTo(p1x, p1y);
+                                        V.lineTo(p2x, p2y);
+                                        V.lineTo(p4x, p4y);
+                                        V.lineTo(p3x, p3y);
+                                        V.lineTo(p1x, p1y);
+                                        V.closePath();
+                                        V.stroke();
+                                        }
 				//~ V.translate(-x,-y)
 				//~ if ( im[img] && im[img].data )
 					//~ V.drawImage(im[img], x,y)
