@@ -267,8 +267,10 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				x = frame[i][2] * sx
 				y = frame[i][3] * sy
 				a = frame[i][4]
-				end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
-				begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
+				end_arc = 0
+// (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
+				begin_arc = Math.PI * 2
+//(frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
 	
 				r = (frame[i][0]=="b" ? 2 :(frame[i][0]=="p" ? 5 : (frame[i][1]+1)*(frame[i][1]+1)))
 				//~ V.rotate(r)
@@ -278,7 +280,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				V.arc(x,y, r*sx,begin_arc,end_arc,true);
 				V.closePath();
 				V.stroke();
-                                if (frame[i][0]=="s")
+                                if (frame[i][0]=="p")
                                         {heading = frame[i][4];
                                         wing = (145 * Math.PI / 180);
                                         p1x = x + r * sx * Math.cos(heading);
