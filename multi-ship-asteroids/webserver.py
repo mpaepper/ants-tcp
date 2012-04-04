@@ -243,6 +243,50 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			V.fillStyle = 'black'
 			V.fillRect(0,0,600,600)
 		}
+
+              function wrap_item(item, x_trans, y_trans) {
+                        var index = item[1];
+                        if (item[0] == 'a')
+                                index = 8;
+                        if (item[0] == 's')
+                                index = item[7];
+                        V.fillStyle = color[index]
+                        V.strokeStyle = color[index]
+                        img = item[0] + item[1]
+                        x = (item[2] + x_trans) * sx
+                        y = (item[3] + y_trans) * sy
+                        a = item[4]
+                        end_arc = 0
+                        begin_arc = ( Math.PI * 2 )
+                        r = (item[0]=="b" ? 1 :(item[0]=="s" ? 5 : (item[1]+1)*(item[1]+1)))
+                        V.fillText(img, x,y)
+                        V.beginPath();
+                        V.arc(x,y, r*sx,begin_arc,end_arc,true);
+                        V.closePath();
+                        V.stroke();
+                        if (item[0]=="s")
+                                {heading = item[4];
+                                wing = (145 * Math.PI / 180);
+                                p1x = x + r * sx * Math.cos(heading);
+                                p1y = y + r * sy * Math.sin(heading);
+                                p2x = x + r * sx * Math.cos(heading + wing);
+                                p2y = y + r * sy * Math.sin(heading + wing);
+                                p3x = x + r * sx * Math.cos(heading - wing);
+                                p3y = y + r * sy * Math.sin(heading - wing);
+                                p4x = x + (r / 2) * sx * Math.cos(heading - Math.PI);
+                                p4y = y + (r / 2) * sy * Math.sin(heading - Math.PI);
+                                V.beginPath();
+                                V.strokeStyle = color[8]
+                                V.moveTo(p1x, p1y);
+                                V.lineTo(p2x, p2y);
+                                V.lineTo(p4x, p4y);
+                                V.lineTo(p3x, p3y);
+                                V.lineTo(p1x, p1y);
+                                V.closePath();
+                                V.stroke();
+                                }
+                }
+		
 		function draw_frame(f) {
 			clear()
 			frame = replay_data["replaydata"]["data"][f]
@@ -257,6 +301,16 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			info += "]"
 			V.fillText(info, 260,10)
 			for (i in frame) {
+				wrap_item(frame[i], 0, 0);
+				wrap_item(frame[i], width, 0);
+				wrap_item(frame[i], 0, height);
+				wrap_item(frame[i], width, height);
+				wrap_item(frame[i], -width, 0);
+				wrap_item(frame[i], 0, -height);
+				wrap_item(frame[i], -width, -height);
+				wrap_item(frame[i], width, -height);
+				wrap_item(frame[i], -width, height);
+/*
 				var index = frame[i][1];
 				if (frame[i][0] == 'a')
 					index = 8;
@@ -290,11 +344,13 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					p2y = y + r * sy * Math.sin(heading + wing);
 					p3x = x + r * sx * Math.cos(heading - wing);
 					p3y = y + r * sy * Math.sin(heading - wing);
+					p4x = x + (r / 2) * sx * Math.cos(heading - Math.PI);
+					p4y = y + (r / 2) * sy * Math.sin(heading - Math.PI);
 					V.beginPath();
 					V.strokeStyle = color[8]
 					V.moveTo(p1x, p1y);
 					V.lineTo(p2x, p2y);
-					V.lineTo(x, y);
+					V.lineTo(p4x, p4y);
 					V.lineTo(p3x, p3y);
 					V.lineTo(p1x, p1y);
 					V.closePath();
@@ -304,8 +360,10 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				//~ if ( im[img] && im[img].data )
 					//~ V.drawImage(im[img], x,y)
 				//~ V.rotate(-r)
+*/
 			}
 		}
+
         function stop() {
             clearInterval(tick)
             tick=-1
