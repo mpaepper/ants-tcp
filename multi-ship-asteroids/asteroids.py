@@ -325,7 +325,7 @@ class Asteroids(Game):
 #        return wx, wy
     def do_ship(self, player, ship, thrust, turn, fire, step_count):
       ship = self.ships[ship]
-      if ship["owner"] == player:
+      if ship["owner"] == player and ship["is_alive"] and not ship["processed_this_turn"]:
         # TODO 0.5 is the ship's max thrust, should become a variable
         real_thrust = self.m_thrust * float(thrust) / self.turn_steps
         # TODO pi/16 is the ship's max turn rate, should become a variable
@@ -667,11 +667,13 @@ class Asteroids(Game):
 
             Used by engine to determine players still in the game
         """
+        if self.killed[player]: return False
         result = False
         for ship in self.ships:
             if ship["owner"] == player and ship["current_hp"] > 0:
                 result = True
                 break
+        self.killed[player] = (self.killed[player] or (not result))
         return result
 
     def get_error(self, player):
