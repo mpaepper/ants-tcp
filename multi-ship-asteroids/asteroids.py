@@ -34,6 +34,7 @@ class Asteroids(Game):
         self.m_thrust = 0.5
         self.m_turn = (pi / 16)
         self.ship_radius = 5
+        self.speed_cap = 10.0
         map_data = self.parse_map(map_text)
 
         self.turn = 0
@@ -146,7 +147,6 @@ class Asteroids(Game):
                                 "y": y,
                                 "heading": heading,
                                 "speed": speed,
-                                # why combine these?
                                 "current_speed": (current_x, current_y),
                                 "current_hp": 2,
                                 # previous_ is for (future) collision detection
@@ -323,6 +323,38 @@ class Asteroids(Game):
 #        wx = self.sub_wrap(x, self.width)
 #        wy = self.sub_wrap(y, self.height)
 #        return wx, wy
+
+    def xy_speed_to_vector(self, xs, ys):
+        try:
+            heading = atan(ys / xs)
+        except:
+            if ys < 0:
+                heading = (-pi) / 2
+            elif ys > 0:
+                heading = pi / 2
+            else:
+                heading = 0 # stationary object, heading is not a number
+        try:
+            speed = ys / sin(heading)
+        except:
+            speed = ys
+        return heading, speed
+
+    def cap_xy_speed(self, cspeed):
+        xs = cspeed[0]
+        ys = cspeed[1]
+        direction, speed = self.xy_speed_to_vector(xs, ys)
+        print(str(direction) + ", " + str(speed) + "\n")
+        if abs(speed) > self.speed_cap:
+            if speed > 0:
+                new_speed = self.speed_cap
+            else: 
+                new_speed = -self.speed_cap
+            new_xs = new_speed * cos(direction)
+            new_ys = new_speed * sin(direction)
+            return new_speed, new_xs, new_ys
+        else: return speed, xs, ys
+
     def do_ship(self, player, ship, thrust, turn, fire, step_count):
       ship = self.ships[ship]
       if ship["owner"] == player and ship["is_alive"] and not ship["processed_this_turn"]:
@@ -334,7 +366,9 @@ class Asteroids(Game):
         ty = real_thrust * sin(ship["heading"]) #/ self.turn_steps
         current_speed = (ship["current_speed"][0] + tx,
                          ship["current_speed"][1] + ty)
-        ship["current_speed"] = current_speed
+        speed, x_speed, y_speed = self.cap_xy_speed(current_speed)
+        ship["current_speed"] = [x_speed, y_speed]
+        ship["speed"] = speed
         ship["y"] += (current_speed[1] / self.turn_steps)
         ship["x"] += (current_speed[0] / self.turn_steps)
         ship["x"] = self.wrap(ship["x"], self.width)
@@ -350,19 +384,20 @@ class Asteroids(Game):
                 bullet_dy = impetus * sin(ihead)
                 bullet_x_speed = ship["current_speed"][0] + bullet_dx
                 bullet_y_speed = ship["current_speed"][1] + bullet_dy
-                try:
-                    bullet_heading = atan(bullet_y_speed / bullet_x_speed)
-                except:
-                    if bullet_y_speed < 0:
-                        bullet_heading = (-pi) / 2
-                    elif bullet_y_speed > 0:
-                        bullet_heading = pi / 2
-                    else:
-                        bullet_heading = 0
-                try:
-                    bullet_speed = bullet_y_speed / sin(bullet_heading)
-                except:
-                    bullet_speed = bullet_y_speed
+                bullet_heading, bullet_speed = self.xy_speed_to_vector (bullet_x_speed, bullet_y_speed)
+#                try:
+#                    bullet_heading = atan(bullet_y_speed / bullet_x_speed)
+#                except:
+#                    if bullet_y_speed < 0:
+#                        bullet_heading = (-pi) / 2
+#                    elif bullet_y_speed > 0:
+#                        bullet_heading = pi / 2
+#                    else:
+#                        bullet_heading = 0
+#                try:
+#                    bullet_speed = bullet_y_speed / sin(bullet_heading)
+#                except:
+#                    bullet_speed = bullet_y_speed
                 bullet = { "owner": ship["owner"],
                            "x": ship["x"],
                            "y": ship["y"],
@@ -370,7 +405,6 @@ class Asteroids(Game):
                            "previous_y": ship["y"],
                            "turns_to_live": 12,
                            "heading": bullet_heading,
-                           # add ship's speed to bullet's speed?
                            "speed": bullet_speed }
                 for count in range(0, self.turn_steps):
                     self.update_body(bullet)
@@ -481,7 +515,10 @@ class Asteroids(Game):
                 distance = self.distance(bx, by, sx, sy)
                 # TODO 5 is the ship's size, should become a variable
                 if distance <= 5:
-                    self.score[bullet["owner"]] += 1
+                    if bullet["owner"] == ship["owner"]:
+                        self.score[bullet["owner"]] -= 1
+                    else:
+                        self.score[bullet["owner"]] += 1
                     bullets_to_remove.append(bullet)
                     ships_to_kill.append(ship)
                     break
@@ -647,6 +684,7 @@ class Asteroids(Game):
         result.append(['m_thrust', self.m_thrust])
         result.append(['m_turn', self.m_turn])
         result.append(['ship_radius', self.ship_radius])
+        result.append(['speed_cap', self.speed_cap])
         # information hidden from players
         #if player is None:
         #    result.append(['food_start', self.food_start])
