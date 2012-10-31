@@ -1,4 +1,16 @@
--- Update --
+-- How to run --
+
+Open a terminal:
+
+   cd /path/to/ants
+   python2 tcpserver.py
+
+Open another terminal:
+
+   cd /path/to/ants
+   python2 webserver.py
+
+-- Source --
 
 The branches have been combined into combine-better. The master branch should track this branch for now.
 
