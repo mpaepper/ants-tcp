@@ -17,7 +17,7 @@ LAND = -2
 WATER = -1
 MAP_OBJECT = '.%'
 
-HEADING = {'n' : (-1, 0)
+HEADING = {'n' : (-1, 0),
            'e': (0, 1),
            's': (1, 0),
            'w': (0, -1)}
