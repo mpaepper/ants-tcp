@@ -13,7 +13,16 @@ try:
 except ImportError:
     from sys import maxsize as maxint
 
-class Wargame(Game):
+LAND = -2
+WATER = -1
+MAP_OBJECT = '.%'
+
+HEADING = {'n' : (-1, 0)
+           'e': (0, 1),
+           's': (1, 0),
+           'w': (0, -1)}
+
+class Tron(Game):
     def __init__(self, options=None):
         # setup options
         map_text = options['map']
@@ -33,25 +42,16 @@ class Wargame(Game):
 
         map_data = self.parse_map(map_text)
 
-        self.group_count = self.count_groups(map_data)
+#        self.group_count = self.count_groups(map_data)
 
         self.turn = 0
-        self.min_income = 5	#FIXME
-        self.base_unit = 1000	#FIXME tell the player, maybe add to map
-        self.neutral_id = 10000
-        self.attack_casualty = 70
-        self.defense_casualty = 60
         self.num_players = map_data["players"]
         self.player_to_begin = randint(0, self.num_players)
-
-#        self.asteroids = map_data["asteroids"]
-#        self.bullets = []
-#        self.players = map_data["players"]
-        self.players = []
-        for count in range(0, self.num_players):
-            self.players.append(dict(zip(
-                ["player_id", "armies_to_place", "move_index", "finished_turn"],
-                 [count, 0, 0, False])))
+#        self.players = []
+#        for count in range(0, self.num_players):
+#            self.players.append(dict(zip(
+#                ["player_id", "finished_turn"],
+#                 [count, False])))
         # used to cutoff games early
         self.cutoff = None
         self.cutoff_bot = None # Can be ant owner, FOOD or LAND
@@ -66,10 +66,8 @@ class Wargame(Game):
         # initialize size
         self.height, self.width = map_data['size']
 
-        # declare territories and connections
-        self.territory = map_data['territories']
-        self.connection = map_data['connections']
         # for scenarios, the map file is followed exactly
+#This might be Ants-specific and removeable?
         if self.scenario:
             # initialize ants
             #for player, player_ants in map_data['ants'].items():
@@ -100,42 +98,22 @@ class Wargame(Game):
         # the engine may kill players before the game starts and this is needed
         # to prevent errors
         self.orders = [[] for i in range(self.num_players)]
+        self.agent_destination = []
+        self.killed_agents = []
+        self.agents = deepcopy map_data["agents"]
         
         ### collect turns for the replay
         self.replay_data = []
 
-    def count_groups(self, map_data):
-        group = dict()
-        for t in map_data['territories']:
-            try:
-                group[t['group']] += 1
-            except:
-                group[t['group']] = 1
-        return group
-
-    def player_groups(self, player):
-        pgroup = dict()
-        for t in self.territory:
-            if t['owner'] == player['player_id']:
-                try:
-                    pgroup[t['group']] += 1
-                except:
-                    pgroup[t['group']] = 1
-        return pgroup
-
-    def complete_groups(self, player_group):
-        result = 0
-        for group_id, value in player_group.items():
-            if self.group_count[group_id] == value and value > 0:
-                result += 1
-        return result
+    def player_has_agent(self, loc):
 
     def parse_map(self, map_text):
         """ Parse the map_text into a more friendly data structure """
         width = None
         height = None
-        territory = []
-        connection = []
+        agents_per_player = None
+        agents = defaultdict(list)
+        water = []
         num_players = None
 
         for line in map_text.split("\n"):
@@ -154,31 +132,44 @@ class Wargame(Game):
                 height = int(value)
             elif key == "players":
                 num_players = int(value)
-            elif key == "t":
+            elif key == "agents_per_player":
+                agents_per_player = int(value)
+            elif key == "a":
                 values = value.split()
-                t_id = int(values[0])
-                group = int(values[1])
-                x = int(values[2])
-                y = int(values[3])
-                owner = int(values[4])
-                armies = int(values[5])
-                territory.append({"territory_id": t_id,
-                                  "group": group,
-                                  "x": x,
-                                  "y": y,
-                                  "owner": owner,
-                                  "armies": armies})
-            elif key == "c":
-                values = value.split()
-                connect_a = int(values[0])
-                connect_b = int(values[1])
-                connection.append({"a": connect_a,
-                                   "b": connect_b})
+                owner = int(values[0])
+                row = int(values[1])
+                col = int(values[2])
+                heading = int(values[3])
+                agents.append({"owner": owner,
+                               "row" : row,
+                               "col" : col,
+                               "heading": heading})
+             elif key == 'm':
+                if ant_list is None:
+                    if num_players is None:
+                        raise Exception("map",
+                                        "players count expected before map lines")
+                    ant_list = [chr(97 + i) for i in range(num_players)]
+                    hill_list = list(map(str, range(num_players)))
+                    hill_ant = [chr(65 + i) for i in range(num_players)]
+                if len(value) != width:
+                    raise Exception("map",
+                                    "Incorrect number of cols in row %s. "
+                                    "Got %s, expected %s."
+                                    %(row, len(value), width))
+                for col, c in enumerate(value):
+                    if c == MAP_OBJECT[WATER]:
+                        water.append((row,col))
+                    elif c != MAP_OBJECT[LAND]:
+                        raise Exception("map",
+                                        "Invalid character in map: %s" % c)
+                row += 1
         return {
             "size":      (width, height),
-            "territories": territory,
-            "connections": connection,
-            "players": num_players
+            "agents_per_player": agents_per_player,
+            "agents": agents,
+            "players": num_players,
+            "water": water.
         }
 
     def render_changes(self, player):
@@ -199,33 +190,19 @@ class Wargame(Game):
             output.
         """
         changes = []
-        changes.extend(sorted(
-            ['p', p["player_id"], p["armies_to_place"]]
-            for p in self.players if self.is_alive(p["player_id"])))
-        changes.extend(sorted(
-            ['t', t["territory_id"], t["group"], t["x"], t["y"], t["owner"], t["armies"]]
-            for t in self.territory))
-        changes.extend(sorted(
-            ['c', c["a"], c["b"]]
-            for c in self.connection))
-#        result.extend(sorted(
-#            ['c', c["a"], c["b"]]
-#            for c in self.connection))
- #        changes.extend(sorted(
-#            ["a", a["category"], a["x"], a["y"], a["heading"], a["speed"]]
-#            for a in self.asteroids))
 #        changes.extend(sorted(
-#            ["b", b["owner"], b["x"], b["y"], b["heading"], b["speed"]]
-#            for b in self.bullets))
+#            ['p', p["player_id"]]
+#            for p in self.players if self.is_alive(p["player_id"])))
+        changes.extend(sorted(
+            ['a', a["row"], a["col"], a["heading"], a["owner"]]
+            for a in self.agents))
         return changes
 
     def parse_orders(self, player, lines):
         """ Parse orders from the given player
 
-            Orders must be of the form: o thrust turn fire
-            thrust must be a float between 0 and 1
-            turn must be a float between -1 and 1
-            direction must be an int and either 0 or 1
+            Orders must be of the form: o row col heading
+            row and col refer to the location of the agent you are ordering.
         """
         orders = []
         valid = []
@@ -235,7 +212,7 @@ class Wargame(Game):
         for line in lines:
             line = line.strip().lower()
             # ignore blank lines and comments
-            if not line or line[0] == '#':
+            if not line: # or line[0] == '#':
                 continue
 
             if line[0] == '#':
@@ -248,54 +225,21 @@ class Wargame(Game):
             if data[0] != 'o':
                 invalid.append((line, 'unknown action'))
                 continue
-            if data[1] != 'a' and data [1] != 't' and data[1] != 'm' and data[1] != 'd':
-                invalid.append((line, 'unknown action'))
-                continue
-            if (data[1] == 'd' and len(data) != 4) or (data[1] != 'd' and len(data) != 5):
-                invalid.append((line, 'incorrectly formatted order'))
-                continue
-
-            if data[1] == 'd':
-                action = 'd'
-                num = data[2]
-                source = -1
-                target = data[3]
             else:
-                action, num, source, target = data[1:]
+                row, col, heading = data[1:]
 
             # validate the data types
             try:
-                num = int(num)
+                row, col = int(row), int(col)
             except ValueError:
-                invalid.append((line, "num to move is not an int"))
+                invalid.append((line, "row and col should be integers"))
+                continue
+            if heading not in HEADING:
+                invalid.append((line, "invalid direction"))
                 continue
 
-            try:
-                source = int(source)
-            except ValueError:
-                invalid.append((line, "source is not an int"))
-                continue
-
-            try:
-                target = int(target)
-            except ValueError:
-                invalid.append((line, "target is not an int"))
-                continue
-
-            if num < 1:
-                invalid.append((line, "num to move is smaller than 1"))
-
-            if action == 'd' and source != -1:
-                invalid.append((line, "deploy source is not -1 but should be"))
-
-            if action != 'd' and source < 0:
-                invalid.append((line, "move source less than 0"))
-
-            if target < 0:
-                invalid.append((line, "order target less than 0"))
-
-            # this order can be parsed
-            orders.append((player, action, num, source, target))
+            # if all is well, append to orders
+            orders.append((player, row, col, heading))
             valid.append(line)
 
         return orders, valid, ignored, invalid
@@ -310,39 +254,36 @@ class Wargame(Game):
         valid = []
         valid_orders = []
         seen_locations = set()
-        for line, (player, action, num, source, target) in zip(lines, orders):
+        for line, (player, row, col, heading) in zip(lines, orders):
             ## validate orders
             #if loc in seen_locations:
             #    invalid.append((line,'duplicate order'))
             #    continue
-            #try:
-            #    if self.map[loc[0]][loc[1]] != player:
-            #        invalid.append((line,'not player ant'))
-            #        continue
-            #except IndexError:
-            #    invalid.append((line,'out of bounds'))
-            #    continue
-            #if loc[0] < 0 or loc[1] < 0:
-            #    invalid.append((line,'out of bounds'))
-            #    continue
-            #dest = self.destination(loc, AIM[direction])
-            #if self.map[dest[0]][dest[1]] in (FOOD, WATER):
-            #    ignored.append((line,'move blocked'))
-            #    continue
+            if not player_has_agent(row, col):
+                invalid.append((line,'no agent belonging to this player at this location'))
+                continue
+#            try:
+#                test_loc = 
+#            except IndexError:
+#                invalid.append((line,'out of bounds'))
+#                continue
+            if row < 0 or col < 0:
+                invalid.append((line,'out of bounds'))
+                continue
 
             # this order is valid!
-            valid_orders.append((player, action, num, source, target))
+            valid_orders.append((player, row, col, heading))
             valid.append(line)
             #seen_locations.add(loc)
 
         return valid_orders, valid, ignored, invalid
 
-    def max_orders(self):
-        result = 0
-        for player_orders in self.orders:
-            if len(player_orders) > result:
-                result = len(player_orders)
-        return result
+#    def max_orders(self):
+#        result = 0
+#        for player_orders in self.orders:
+#            if len(player_orders) > result:
+#                result = len(player_orders)
+#        return result
 
     def update_move_sequence(self):
         self.player_to_begin = self.player_to_begin + 1
@@ -356,29 +297,6 @@ class Wargame(Game):
         p1 = range(self.player_to_begin, self.num_players)
         result = p1 + (range(0, self.player_to_begin))
         return result
-
-    def attack (self, player, num, source, target):
-        defender_strength = self.territory[target]["armies"]
-        attacker_losses = defender_strength * self.attack_casualty / 100
-        defender_losses = num * self.defense_casualty / 100
-        defenders_remain = self.territory[target]["armies"] - defender_losses
-        attackers_remain = num - attacker_losses
-        if defenders_remain < 1 and attackers_remain > 0:
-            self.territory[target]["armies"] = max (0, attackers_remain)
-            self.territory[source]["armies"] -= num
-            self.territory[target]["owner"] = player
-        elif defenders_remain > 0:
-            self.territory[target]["armies"] = defenders_remain
-            self.territory[source]["armies"] = max (0, attackers_remain)
-        else:
-            self.territory[target]["armies"] = 0
-            self.territory[source]["armies"] = 0
-            self.territory[target]["owner"] = self.neutral_id
-            self.territory[source]["owner"] = self.neutral_id
-
-    def transfer (self, player, num, source, target):
-        self.territory[source]["armies"] -= num
-        self.territory[target]["armies"] += num
 
     def do_move_phase_order(self, (player, action, num, source, target)):
         valid = False
@@ -404,18 +322,17 @@ class Wargame(Game):
                         self.attack (player, will_send, source, target)
         return valid
 
-    def process_next_order(self, player_index):
+    def process_next_order(self, player):
         """ Process one player order in which something actually happens
         """
-        player = self.players[player_index]
         if not player["finished_turn"]:
             done = False
             while not done:
-                if len(self.orders[player_index]) <= player["move_index"]:
+                if len(self.orders[player]) <= player["move_index"]:
                     player["finished_turn"] = True
                     done = True
                 else:
-                    order = self.orders[player_index][player["move_index"]]
+                    order = self.orders[player][player["move_index"]]
                     valid = self.do_move_phase_order(order)
                     player["move_index"] += 1
                     if valid:
@@ -423,38 +340,65 @@ class Wargame(Game):
 
     def unprocessed_orders_remain(self):
         result = False
-        for player in self.players:
+        for player in range(self.num_players):
             if player["finished_turn"] == False:
                 result = True
         return result
 
-    def deployment_orders(self, player):
-        player_orders = self.orders[player["player_id"]]
-        limit = len(player_orders)
+    def destination(self, loc, d):
+        """ Returns the location produced by offsetting loc by d """
+        return ((loc[0] + d[0]) % self.height, (loc[1] + d[1]) % self.width)
+
+    def tron_orders(self, player):
+        player_orders = self.orders[player]
         done = False
         for order in player_orders:
             if not done:
-                (player_id, action, num, source, target) = order
-                if action == "d":
-                    player["move_index"] += 1
-                    if self.territory[target]["owner"] == player_id and num > 0 and self.players[player_id]["armies_to_place"] > 0:
-                        will_deploy = min (num, self.players[player_id]["armies_to_place"] - 1)
-                        valid = True
-                        self.territory[target]["armies"] += will_deploy
-                        self.players[player_id]["armies_to_place"] -= will_deploy
-                else: done = True
+                (player_id, row, col, heading) = order
+                for agent in self.agents:
+                    if agent["row"] == row and agent["col"] == col:
+                        agent["heading"] = heading
+
+
+    def kill_overlap(self):
+        unique = []
+        for value in self.agent_destinations:
+            if value not in unique:
+                unique.append(value)
+            else:
+                self.killed_agents.append(value)
+
+    def move_agents(self):
+        for agent in agents:
+            row, col = agent["row"], agent["col"]
+            heading = agent["heading"]
+            dest = self.destination([row, col], HEADING[heading])
+            if self.map[dest[0]][dest[1]] == WATER:
+                self.killed_agents.append(dest)
+            else self.agent_destinations.append(dest)
+
+    def mark_trail(self):
+        for row, col in self.agent_destinations:
+            self.map[row][col] = WATER
+
+    def remove_killed(self):
+        remaining = []
+        for agent in self.agents:
+            if not (agent["row"], agent["col"]) in self.killed_agents:
+                remaining.append(agent)
+        self.agents = remaining
 
     def do_orders(self):
         """ Execute player orders and handle conflicts
         """
-        for player in self.players:
-            self.deployment_orders(player)
-        self.update_move_sequence()
-        sequence = self.get_move_sequence()
-        while self.unprocessed_orders_remain():
-            for player_index in sequence:
-                self.process_next_order(player_index)
-        
+        for player in range(self.num_player):
+            if self.is_alive(player):
+                self.tron_orders(player)
+        self.move_agents()
+        self.mark_trail()
+        self.kill_overlap()
+        self.remove_killed()
+
     def remaining_players(self):
         """ Return the players still alive """
         return [p for p in range(self.num_players) if self.is_alive(p)]
@@ -506,37 +450,38 @@ class Wargame(Game):
         if self.cutoff is None:
             self.cutoff = 'turn limit reached'
 
-    def count_territories(self, player_id):
-        result = 0
-        for t in self.territory:
-            if t["owner"] == player_id:
-                result += 1
-        return result
+#    def count_territories(self, player_id):
+#        result = 0
+#        for t in self.territory:
+#            if t["owner"] == player_id:
+#                result += 1
+#        return result
 
-    def update_scores(self):
-        for player in self.players:
-            index = player["player_id"]
-            self.score[index] = self.count_territories(index)
+#    def update_scores(self):
+#        for player in self.players:
+#            index = player["player_id"]
+#            self.score[index] = self.count_territories(index)
 
-    def add_army_income(self, player):
-        terri = self.count_territories(player["player_id"])
-        income = max(self.min_income, int(terri / 3))
-        bonus = self.complete_groups(self.player_groups(player))
-        player["armies_to_place"] += (income + bonus) * self.base_unit
+#    def add_army_income(self, player):
+#        terri = self.count_territories(player["player_id"])
+#        income = max(self.min_income, int(terri / 3))
+#        bonus = self.complete_groups(self.player_groups(player))
+#        player["armies_to_place"] += (income + bonus) * self.base_unit
 
-    def begin_player_turn(self, player):
-        player["processed_this_turn"] = False
-        player["finished_turn"] = False
-        player["finished_deployment"] = False
-        player["move_index"] = 0
-        self.add_army_income(player)
+#    def begin_player_turn(self, player):
+#        player["processed_this_turn"] = False
+#        player["finished_turn"] = False
+#        player["finished_deployment"] = False
+#        player["move_index"] = 0
+#        self.add_army_income(player)
 
     def start_turn(self):
         """ Called by engine at the start of the turn """
         self.turn += 1
         self.orders = [[] for _ in range(self.num_players)]
-        for player in self.players:
-            self.begin_player_turn(player)
+        self.agent_destinations = []
+#        for player in self.players:
+#            self.begin_player_turn(player)
 
     def finish_turn(self):
         """ Called by engine at the end of the turn """
@@ -593,16 +538,18 @@ class Wargame(Game):
         result.append(['height', self.height])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
-        result.append(['neutral_id', self.neutral_id])
+#        result.append(['neutral_id', self.neutral_id])
+#        result.extend(sorted(
+#            ['t', t["territory_id"], t["group"], t["x"], t["y"], t["owner"], t["armies"]]
+#            for t in self.territory))
+#        result.extend(sorted(
+#            ['c', c["a"], c["b"]]
+#            for c in self.connection))
         result.extend(sorted(
-            ['t', t["territory_id"], t["group"], t["x"], t["y"], t["owner"], t["armies"]]
-            for t in self.territory))
-        result.extend(sorted(
-            ['c', c["a"], c["b"]]
-            for c in self.connection))
-        result.extend(sorted(
-            ['p', p["player_id"], p["armies_to_place"]]
-            for p in self.players if self.is_alive(p["player_id"])))
+            ['a', p["row"], p["col"], p["heading"], p["owner"]]
+            for a in self.agents ))
+        for row, col in self.water:
+            result.append(['w', row, col])
         # information hidden from players
         #if player is None:
         #    result.append(['food_start', self.food_start])
@@ -618,12 +565,19 @@ class Wargame(Game):
         """
         return self.render_changes(player)
 
+    def living_agents(self, player):
+        count = 0
+        for agent in self.agents:
+            if agent["owner"] = player:
+                count += 1
+        return count
+
     def is_alive(self, player):
         """ Determine if player is still alive
 
             Used by engine to determine players still in the game
         """
-        if self.killed[player] or self.count_territories(player) == 0:
+        if self.killed[player] or self.living_agents(player) == 0:
             return False
         else:
             return True
