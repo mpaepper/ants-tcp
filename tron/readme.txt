@@ -1,3 +1,10 @@
+As more games get added, I'll probably stop trying to explain the branches. Current development branch as of writing this is "tron", but it's being merged with master regularly.
+
+The tron/tron/tron_dist directory has a self-contained copy of the code needed to run tron games and visualize them. 
+
+The root directory for each game contains webserver.py and tcpserver.py, the files behind the TCP servers. Just change the "port" variable to point to whichever port you want, and run both of those scripts. Preferably in a terminal, so you can see their output.
+
+
 -- Update --
 
 This fork has three branches:
