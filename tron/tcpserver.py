@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import select
 #~ import signal
@@ -27,7 +27,7 @@ from time import time,asctime
 import datetime
 
 #from ants import Ants
-from wargame import Wargame
+from tron import Tron
 from engine import run_game
 
 import game_db
@@ -196,7 +196,7 @@ class TcpGame(threading.Thread):
         self.map_name = map_name
         self.nplayers = nplayers
         self.bots=[]
-        self.wargame = Wargame(opts)
+        self.tron = Tron(opts)
         
     def __del__(self):
         #~ print "__del__", self.id, self       
