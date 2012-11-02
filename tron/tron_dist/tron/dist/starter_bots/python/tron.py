@@ -28,6 +28,9 @@ BEHIND = {'n': 's',
           'e': 'w',
           'w': 'e'}
 
+# Some instances of the word "ant" in comments have been replaced by "agent",
+# and sometimes what it says is no longer actually what it does. If you see
+# an erroneous comment, feel free to fix it.
 class Tron():
     def __init__(self):
         self.cols = None
@@ -41,6 +44,13 @@ class Tron():
         self.my_agent = None
         self.turn_start_time = None
         self.turns = 0
+        self.water = []
+
+    def setup_map(self):
+        self.map = [[LAND for col in range(self.cols)]
+                    for row in range(self.rows)]
+        for row, col in self.water:
+            self.map[row][col] = WATER
 
     def setup(self, data):
         'parse initial input and setup starting game state'
@@ -51,8 +61,12 @@ class Tron():
                 key = tokens[0]
                 if key == 'cols':
                     self.cols = int(tokens[1])
+                    if not self.rows == None:
+                        self.setup_map()
                 elif key == 'rows':
                     self.rows = int(tokens[1])
+                    if not self.rows == None:
+                        self.setup_map()
                 elif key == 'player_seed':
                     random.seed(int(tokens[1]))
                 elif key == 'turntime':
@@ -70,8 +84,9 @@ class Tron():
                     self.spawnradius2 = int(tokens[1])
                 elif key == 'turns':
                     self.turns = int(tokens[1])
-        self.map = [[LAND for col in range(self.cols)]
-                    for row in range(self.rows)]
+                elif tokens[0] == 'w':
+                    self.water.append((int(tokens[1]), int(tokens[2])))
+        self.setup_map()
 
     def update(self, data):
         'parse engine input and update the game state'
@@ -130,12 +145,12 @@ class Tron():
         return self.food_list[:]
 
     def passable(self, loc):
-        'true if not water'
+        'true if land'
         row, col = loc
         return self.map[row][col] == LAND
     
     def unoccupied(self, loc):
-        'true if no agents are at the location'
+        'same as passable in Tron, this is a legacy from Ants'
         row, col = loc
         return self.map[row][col] == LAND
 
