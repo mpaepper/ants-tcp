@@ -275,7 +275,7 @@ class Tron(Game):
             #if loc in seen_locations:
             #    invalid.append((line,'duplicate order'))
             #    continue
-            if not player_has_agent(player, row, col):
+            if not self.player_has_agent(player, row, col):
                 invalid.append((line,'no agent belonging to this player at this location'))
                 continue
 #            try:
@@ -408,7 +408,7 @@ class Tron(Game):
 
     def update_scores_for_agent_demise(self):
         """ When an agent dies, its owner loses a point and everybody else
-            gains one
+            alive at the start of this turn gains one
         """
         for agent in self.agents:
             if (agent["row"], agent["col"]) in self.killed_agents:
@@ -574,8 +574,8 @@ class Tron(Game):
         result.append(['loadtime', self.loadtime])
         result.append(['turntime', self.turntime])
         result.append(['player_id', player])
-        result.append(['width', self.width])
-        result.append(['height', self.height])
+        result.append(['cols', self.width])
+        result.append(['rows', self.height])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
 #        result.append(['neutral_id', self.neutral_id])
