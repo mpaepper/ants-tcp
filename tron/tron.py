@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 from random import randrange, choice, shuffle, randint, seed, random
 from math import cos, pi, sin, sqrt, atan
@@ -101,9 +101,26 @@ class Tron(Game):
         self.agent_destination = []
         self.killed_agents = []
         self.agents = deepcopy(map_data["agents"])
-        
+        self.water = deepcopy(map_data["water"])
+
+        self.grid = self.make_grid()
+#        raise Exception(self.grid)
         ### collect turns for the replay
         self.replay_data = []
+
+    def make_grid(self):
+        grid = []
+        for count_row in range(self.height):
+            new_row = []
+            for count_col in range(self.width):
+                new_row.append(MAP_OBJECT[LAND])
+            grid.append(new_row)
+        for (row, col) in self.water:
+            try:
+                grid[row][col] = MAP_OBJECT[WATER]
+            except IndexError:
+                raise Exception("row, col outside range ", row, col, self.water)
+        return grid
 
     def player_has_agent(self, player, row, col):
         result = False
@@ -120,6 +137,7 @@ class Tron(Game):
         agents = []
         water = []
         num_players = None
+        count_row = 0
 
         for line in map_text.split("\n"):
             line = line.strip()
@@ -158,13 +176,13 @@ class Tron(Game):
                                     "Incorrect number of cols in row %s. "
                                     "Got %s, expected %s."
                                     %(row, len(value), width))
-                for col, c in enumerate(value):
+                for count_col, c in enumerate(value):
                     if c == MAP_OBJECT[WATER]:
-                        water.append((row,col))
+                        water.append((count_row, count_col))
                     elif c != MAP_OBJECT[LAND]:
                         raise Exception("map",
                                         "Invalid character in map: %s" % c)
-                row += 1
+                count_row += 1
         return {
             "size":      (width, height),
             "agents_per_player": agents_per_player,
@@ -368,18 +386,18 @@ class Tron(Game):
             else:
                 self.killed_agents.append(value)
 
-    def move_agents(self):
-        for agent in agents:
+    def pre_move_agents(self):
+        for agent in self.agents:
             row, col = agent["row"], agent["col"]
             heading = agent["heading"]
             dest = self.destination([row, col], HEADING[heading])
-            if self.map[dest[0]][dest[1]] == WATER:
+            if self.grid[dest[0]][dest[1]] == MAP_OBJECT[WATER]:
                 self.killed_agents.append(dest)
             else: self.agent_destinations.append(dest)
 
     def mark_trail(self):
         for row, col in self.agent_destinations:
-            self.map[row][col] = WATER
+            self.grid[row][col] = MAP_OBJECT[WATER]
 
     def remove_killed(self):
         remaining = []
@@ -388,16 +406,26 @@ class Tron(Game):
                 remaining.append(agent)
         self.agents = remaining
 
+    def update_agents(self):
+        for agent in self.agents:
+            row, col = agent["row"], agent["col"]
+            heading = agent["heading"]
+            dest_row, dest_col = self.destination([row, col], HEADING[heading])
+            agent["row"] = dest_row
+            agent["col"] = dest_col
+
     def do_orders(self):
         """ Execute player orders and handle conflicts
         """
-        for player in range(self.num_player):
+        for player in range(self.num_players):
             if self.is_alive(player):
                 self.tron_orders(player)
-        self.move_agents()
+#            else: self.killed[player] == True
+        self.pre_move_agents()
         self.mark_trail()
         self.kill_overlap()
         self.remove_killed()
+        self.update_agents()
 
     def remaining_players(self):
         """ Return the players still alive """
@@ -415,7 +443,7 @@ class Tron(Game):
         if len(self.remaining_players()) < 1:
             self.cutoff = 'extermination'
             return True
-        if len(self.remaining_players()) == 1:
+        elif len(self.remaining_players()) == 1:
             self.cutoff = 'lone survivor'
             return True
         #if self.cutoff_turns >= self.cutoff_turn:
@@ -424,7 +452,7 @@ class Tron(Game):
         #    else:
         #        self.cutoff = 'ants not razing hills'
         #    return True
-        return False
+        else: return False
 
     def kill_player(self, player):
         """ Used by engine to signal that a player is out of the game """
@@ -436,6 +464,11 @@ class Tron(Game):
         
         ### append turn 0 to replay
         self.replay_data.append( self.get_state_changes() )
+        result = []
+#        for row, col in self.water:
+#            result.append(['w', row, col])
+#        result.append([]) # newline
+#        self.replay_data.append(result)
 
     def finish_game(self):
         """ Called by engine at the end of the game """
@@ -499,7 +532,7 @@ class Tron(Game):
                 self.score_history[i].extend([last_score]*(self.turn-score_len))
                 self.score_history[i].append(s)
         self.calc_significant_turns()
-        self.update_scores()
+#        self.update_scores()
 
         ### append turn to replay
         self.replay_data.append( self.get_state_changes() )
@@ -546,7 +579,7 @@ class Tron(Game):
 #            ['c', c["a"], c["b"]]
 #            for c in self.connection))
         result.extend(sorted(
-            ['a', p["row"], p["col"], p["heading"], p["owner"]]
+            ['a', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.agents ))
         for row, col in self.water:
             result.append(['w', row, col])
@@ -658,6 +691,7 @@ class Tron(Game):
         replay['ranking_turn'] = self.ranking_turn
         replay['cutoff'] =  self.cutoff
         
+        replay['water'] = self.water
         ### 
         replay['width'] = self.width
         replay['height'] = self.height
