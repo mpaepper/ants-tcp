@@ -109,8 +109,11 @@ class Tron():
                     else:
                         owner = int(tokens[4])
                         if tokens[0] == 'a':
-                            self.map[row][col] = owner
-                            self.agent_list[(row, col)] = owner
+                            try:
+                                self.map[row][col] = owner
+                                self.agent_list[(row, col)] = owner
+                            except IndexError:
+                                sys.stderr.write(('IndexError at {0}, {1}'.format(row, col)))
                         elif tokens[0] == 'd':
                             # add to the dead list
                             self.dead_list[(row, col)].append(owner)

@@ -1,8 +1,8 @@
 #
 # tron_01.map
 #
-width 10
-height 10
+cols 10
+rows 10
 players 2
 agents_per_player 1
 

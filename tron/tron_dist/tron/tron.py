@@ -117,7 +117,7 @@ class Tron(Game):
             try:
                 grid[row][col] = MAP_OBJECT[WATER]
             except IndexError:
-                raise Exception("row, col outside range ", row, col, self.water)
+                raise Exception("row, col outside range ", row, col, grid)
         return grid
 
     def player_has_agent(self, player, row, col):
@@ -129,8 +129,8 @@ class Tron(Game):
 
     def parse_map(self, map_text):
         """ Parse the map_text into a more friendly data structure """
-        width = None
-        height = None
+        cols = None
+        rows = None
         agents_per_player = None
         agents = []
         water = []
@@ -147,10 +147,10 @@ class Tron(Game):
             key, value = line.split(" ", 1)
             key = key.lower()
 
-            if key == "width":
-                width = int(value)
-            elif key == "height":
-                height = int(value)
+            if key == "cols":
+                cols = int(value)
+            elif key == "rows":
+                rows = int(value)
             elif key == "players":
                 num_players = int(value)
             elif key == "agents_per_player":
@@ -169,7 +169,7 @@ class Tron(Game):
                 if num_players is None:
                     raise Exception("map",
                                     "players count expected before map lines")
-                if len(value) != width:
+                if len(value) != cols:
                     raise Exception("map",
                                     "Incorrect number of cols in row %s. "
                                     "Got %s, expected %s."
@@ -181,8 +181,13 @@ class Tron(Game):
                         raise Exception("map",
                                         "Invalid character in map: %s" % c)
                 count_row += 1
+        if count_row != rows:
+                    raise Exception("map",
+                                    "Incorrect number of rows in map "
+                                    "Got %s, expected %s."
+                                    %(count_row, rows))
         return {
-            "size":      (width, height),
+            "size": (rows, cols),
             "agents_per_player": agents_per_player,
             "agents": agents,
             "players": num_players,

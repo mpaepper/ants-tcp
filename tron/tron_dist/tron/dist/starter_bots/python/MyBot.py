@@ -22,7 +22,7 @@ class MyBot:
     def do_turn(self, tron):
         # loop through all my agents and try to give them orders
         # the ant_loc is an ant location tuple in (row, col) form
-        print >> sys.stderr, tron.my_agents()
+#        print >> sys.stderr, tron.my_agents()
         for ant_loc in tron.my_agents():
             # try all directions in given order
             directions = ('n','e','s','w')
