@@ -316,6 +316,7 @@ def run_game(game, bots, options):
                 verbose_log.write('waiting {0} seconds for bots to process end turn\n'.format(end_wait))
             time.sleep(end_wait)
         for bot in bots:
+            print(bot)
             if bot.is_alive:
                 bot.kill()
             bot.release()

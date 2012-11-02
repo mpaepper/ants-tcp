@@ -1,0 +1,36 @@
+Risk-like game prototype. It has barely been tested, and there is no
+visualizer yet. This document may itself be buggy and incomplete. Enjoy!
+
+The example-game script doesn't seem to like relative paths on my system, so
+you will probably have to put the absolute path in.
+
+Bot inputs:
+
+loadtime n
+turntime n
+player_id n
+width n
+height n
+turns n
+player_seed n	# all n are ints
+neutral_id n	# ID given to neutral territories, currently 10000
+t id group x y owner armies	# territory id group x y owner armies
+				# note that group currently does nothing, but
+				# the idea is that it will be used to group
+				# territories for bonus armies.
+				# x and y are just for the unwritten visualizer
+				# and should be removed eventually.
+c id1 id2	# connect territory id1 to territory id2
+p id armies	# player, id, armies to be placed
+
+# Everything above except for the first field are integers
+# Everything below has two single-letter fields, and one or two integer fields
+
+Bot orders:
+
+o d num target	#deploy num troops to target (sources and targets by id)
+o a num source target # attack-only with num troops from source to target
+o t num source target # transfer-only with num troops from source to target
+o m num source target # move num troops from source to target, whether by
+                      # attack or transfer
+

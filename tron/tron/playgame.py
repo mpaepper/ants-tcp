@@ -7,14 +7,14 @@ import time
 from optparse import OptionParser, OptionGroup
 import random
 import cProfile
-import visualizer.visualize_locally
 import json
 try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
 
-from tron import Tron
+import visualizer.visualize_locally
+from wargame import Wargame
 
 sys.path.append("../worker")
 try:
@@ -90,9 +90,9 @@ class Tee(object):
     def close(self):
         for file in self.files:
             file.close()
-            
+
 def main(argv):
-    usage ="Usage: %prog [options] map bot1 bot2\n\nYou must specify a map file."
+    usage ="Usage: %prog [options] --map_file <map file>  bot1 ... botN\n\nYou must specify a map file."
     parser = OptionParser(usage=usage)
 
     # map to be played
@@ -124,7 +124,7 @@ def main(argv):
     parser.add_option("--engine_seed", dest="engine_seed",
                       default=None, type="int",
                       help="Engine seed for the random number generator")
-    
+
     parser.add_option('--strict', dest='strict',
                       action='store_true', default=False,
                       help='Strict mode enforces valid moves for bots')
@@ -144,34 +144,11 @@ def main(argv):
                       default=0, type='int',
                       help='Player position for first bot specified')
 
-    # ants specific game options
-    game_group = OptionGroup(parser, "Game Options", "Options that affect the game mechanics for ants")
-    game_group.add_option("--attack", dest="attack",
-                          default="focus",
-                          help="Attack method to use for engine. (closest, focus, support, damage)")
+    # asteroids specific game options
+    game_group = OptionGroup(parser, "Game Options", "Options that affect the game mechanics for asteroids")
     game_group.add_option("--kill_points", dest="kill_points",
                           default=2, type="int",
                           help="Points awarded for killing a hill")
-    game_group.add_option("--food", dest="food",
-                          default="symmetric",
-                          help="Food spawning method. (none, random, sections, symmetric)")
-    game_group.add_option("--viewradius2", dest="viewradius2",
-                          default=77, type="int",
-                          help="Vision radius of ants squared")
-    game_group.add_option("--spawnradius2", dest="spawnradius2",
-                          default=1, type="int",
-                          help="Spawn radius of ants squared")
-    game_group.add_option("--attackradius2", dest="attackradius2",
-                          default=5, type="int",
-                          help="Attack radius of ants squared")
-    game_group.add_option("--food_rate", dest="food_rate", nargs=2, type="int", default=(5,11),
-                          help="Numerator of food per turn per player rate")
-    game_group.add_option("--food_turn", dest="food_turn", nargs=2, type="int", default=(19,37),
-                          help="Denominator of food per turn per player rate")
-    game_group.add_option("--food_start", dest="food_start", nargs=2, type="int", default=(75,175),
-                          help="One over percentage of land area filled with food at start")
-    game_group.add_option("--food_visible", dest="food_visible", nargs=2, type="int", default=(3,5),
-                          help="Amount of food guaranteed to be visible to starting ants")
     game_group.add_option("--cutoff_turn", dest="cutoff_turn", type="int", default=150,
                           help="Number of turns cutoff percentage is maintained to end game early")
     game_group.add_option("--cutoff_percent", dest="cutoff_percent", type="float", default=0.85,
@@ -186,7 +163,7 @@ def main(argv):
     #    profiling to stderr
     # the log directory will contain
     #    the replay or stream file used by the visualizer, if requested
-    #    the bot input/output/error logs, if requested    
+    #    the bot input/output/error logs, if requested
     log_group = OptionGroup(parser, "Logging Options", "Options that control the logging")
     log_group.add_option("-g", "--game", dest="game_id", default=0, type='int',
                          help="game id to start at when numbering log files")
@@ -234,7 +211,7 @@ def main(argv):
     try:
         if opts.profile:
             # put profile file into output dir if we can
-            prof_file = "ants.profile"
+            prof_file = "asteroids.profile"
             if opts.log_dir:
                 prof_file = os.path.join(opts.log_dir, prof_file)
             # cProfile needs to be explitly told about out local and global context
@@ -281,19 +258,10 @@ def run_rounds(opts,args):
 # this split of options is not needed, but left for documentation
     game_options = {
         "map": opts.map,
-        "attack": opts.attack,
         "kill_points": opts.kill_points,
-        "food": opts.food,
-        "viewradius2": opts.viewradius2,
-        "attackradius2": opts.attackradius2,
-        "spawnradius2": opts.spawnradius2,
         "loadtime": opts.loadtime,
         "turntime": opts.turntime,
         "turns": opts.turns,
-        "food_rate": opts.food_rate,
-        "food_turn": opts.food_turn,
-        "food_start": opts.food_start,
-        "food_visible": opts.food_visible,
         "cutoff_turn": opts.cutoff_turn,
         "cutoff_percent": opts.cutoff_percent,
         "scenario": opts.scenario }
@@ -323,7 +291,7 @@ def run_rounds(opts,args):
             game_options['map'] = map_file.read()
         if opts.engine_seed:
             game_options['engine_seed'] = opts.engine_seed + round
-        game = Tron(game_options)
+        game = Wargame(game_options)
         # initialize bots
         bots = [get_cmd_wd(arg, exec_rel_cwd=opts.secure_jail) for arg in args]
         bot_count = len(bots)
@@ -352,7 +320,7 @@ def run_rounds(opts,args):
         if not opts.log_replay and not opts.log_stream and (opts.log_dir or opts.log_stdout):
             opts.log_replay = True
         replay_path = None # used for visualizer launch
-        
+
         if opts.log_replay:
             if opts.log_dir:
                 replay_path = os.path.join(opts.log_dir, '{0}.replay'.format(game_id))
@@ -375,7 +343,7 @@ def run_rounds(opts,args):
                     engine_options['stream_log'] = sys.stdout
         else:
             engine_options['stream_log'] = None
-        
+
         if opts.log_input and opts.log_dir:
             engine_options['input_logs'] = [open(os.path.join(opts.log_dir, '{0}.bot{1}.input'.format(game_id, i)), 'w')
                              for i in range(bot_count)]
@@ -404,14 +372,14 @@ def run_rounds(opts,args):
                 engine_options['error_logs'] = [stderr] * bot_count
         else:
             engine_options['error_logs'] = None
-        
+
         if opts.verbose:
             if opts.log_stdout:
                 engine_options['verbose_log'] = Comment(sys.stdout)
             else:
                 engine_options['verbose_log'] = sys.stdout
-            
-        engine_options['game_id'] = game_id 
+
+        engine_options['game_id'] = game_id
         if opts.rounds > 1:
             print('# playgame round {0}, game id {1}'.format(round, game_id))
 
@@ -456,5 +424,6 @@ def run_rounds(opts,args):
                 else:
                     visualizer.visualize_locally.launch(replay_path,
                             generated_path=opts.html_file)
+
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

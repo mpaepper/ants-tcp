@@ -1,0 +1,5 @@
+This is a basic ocaml starter package for the Risk-like AI game proposal.
+Its logic goes like this:
+ - deploy all new troops to the territory with the greatest threat level
+    - one threat point for a neutral neighbor, two for an enemy
+ - attack/transfer from the new deployment territory to the non-friendly neighbor with the largest army
