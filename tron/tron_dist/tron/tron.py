@@ -46,6 +46,7 @@ class Tron(Game):
 
         self.turn = 0
         self.num_players = map_data["players"]
+        self.agents_per_player = map_data["agents_per_player"]
         self.player_to_begin = randint(0, self.num_players)
         # used to cutoff games early
         self.cutoff = None
@@ -73,7 +74,7 @@ class Tron(Game):
                 self.original_map.append(map_row[:])
 
         # initialize scores
-        self.score = [0]*self.num_players
+        self.score = [self.agents_per_player]*self.num_players
         self.bonus = [0]*self.num_players
         self.score_history = [[s] for s in self.score]
 
@@ -405,12 +406,26 @@ class Tron(Game):
         for row, col in self.agent_destinations:
             self.grid[row][col] = MAP_OBJECT[WATER]
 
+    def update_scores_for_agent_demise(self):
+        """ When an agent dies, its owner loses a point and everybody else
+            gains one
+        """
+        for agent in self.agents:
+            if (agent["row"], agent["col"]) in self.killed_agents:
+                for count in range(self.num_players):
+                    if count == agent["owner"]:
+                        self.score[count] -= 1
+                    elif self.is_alive(count):
+                        self.score[count] +=1  
+
     def remove_killed(self):
         """ Remove dead agents from the list of active ones
         """
         remaining = []
         for agent in self.agents:
-            if not (agent["row"], agent["col"]) in self.killed_agents:
+            if (agent["row"], agent["col"]) in self.killed_agents:
+                pass
+            else:
                 remaining.append(agent)
         self.agents = remaining
 
@@ -434,6 +449,7 @@ class Tron(Game):
         self.pre_move_agents()
         self.mark_trail()
         self.kill_overlap()
+        self.update_scores_for_agent_demise()
         self.remove_killed()
         self.update_agents()
 
@@ -500,6 +516,12 @@ class Tron(Game):
         self.agent_destinations = []
 #        for player in self.players:
 #            self.begin_player_turn(player)
+
+#    def update_scores(self):
+#        """ Update the record of players' scores
+#            Proposed scoring for Tron: 
+#                score = friendly agents alive + opposing agents outlived
+#        """
 
     def finish_turn(self):
         """ Called by engine at the end of the turn """
