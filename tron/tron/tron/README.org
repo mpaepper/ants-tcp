@@ -1,0 +1,304 @@
+#+title:  AI Challenge Proposal: Multi-player Asteroids
+#+author:  Erik Winkels
+#+email:   aerique@xs4all.nl
+#+date:    2011-12-28
+#+options: h:4
+
+* General Information
+
+- YouTube: [[http://www.youtu.be/OqfH5J18C30][WIP]] and [[http://youtu.be/9VeWz24_VHk][WIP Update 1]]
+
+This is a proposal and prototype for the next AI Challenge.  It was
+inspired by this forum post:
+http://forums.aichallenge.org/viewtopic.php?f=21&t=2122
+
+In short: a multi-player [[http://en.wikipedia.org/wiki/Asteroids_%28video_game%29][Asteroids]] (or "Space Rocks" if Atari
+complains) in which bots battle it out on a playing field which is
+comprised of their space ships which can fire bullets and asteroids
+which will break up into smaller ones when hit by a bullet.
+
+Given to expected complexity of this challenge it is proposed to turn
+this into one of a shorter duration.  Perhaps four to six weeks at the
+end of spring / beginning of summer.  In the meanwhile others
+can work on a longer, more complex challenge at the end of this year.
+
+The current sample bots are /very/ basic.
+
+** Possible Additions for Real Challenge
+
+Once out of beta the following features could be added:
+
+- Ship configuration: see [[Turn 0: Ship Configuration]].
+- Players can have more than one ship (not Ants like quantities), say
+  up to four.
+- Indestructible asteroids.
+- Obstacles: see [[http://en.wikipedia.org/wiki/Xpilot][XPilot]].
+
+
+* What Should Be Done Next
+
+*note:* I just merged a pull request from berak which addresses the
+first two points.
+
+1. =playgame.py= needs to output a proper replay file.
+1. A visualizer needs to be made that can visualize the replay file,
+   the current =bot-input2avi.sbcl= script is much too slow for proper
+   development.
+1. Perhaps implement scoring as mentioned in the forum post.
+
+
+* Issues
+
+** Bugs
+
+- Collision detection in the engine *sucks*: it is just a check at the
+  end point of each entity at the end of each turn.  A first
+  improvement would be to check whether the paths of entities between
+  turns (which are always straight lines) come within collision
+  distance of eachother. After that we need proper collision detection.
+- The distance check in the engine doesn't account for a wrapping
+  playing field.
+- RAY-INTERSECTS in the Common Lisp sample bot does not account for
+  the wrapping of the playing field.
+
+** Peculiarities
+
+- Ship & players are conflated throughout the source code.  We ought
+  to refer to ships most of the time so we can keep the option open
+  for players to have more than one ship.
+- Movement is space-like in that you do not stop when no thrust is
+  applies in a turn but turning is not space-like (ie. you do not keep
+  turning!).
+
+** Open Questions
+
+- Do we send an enemy ship's, an asteroid's and a bullet's heading and
+  speed to a player?  Currently we do to keep things simple, it would
+  make the challenge quite a bit harder if we didn't.
+
+
+* Game Entities
+
+** Players / Ships
+
+- The ship is a circle.
+- Ships do collide with other ships (including friendlies), asteroids
+  and bullets.
+- Ships do not currently have a maximum speed, the beta should
+  hopefully show whether this is needed or not.
+- For looks in the visualizer a ship can be drawn as the classical
+  Asteroids triangle but then the hit bubble should also be drawn like
+  the =bot-input2avi.sbcl= script does and as can be seen in the
+  YouTube movies.
+
+Default parameters:
+
+- *hit points*: 2
+- *max thrust*: 0.5 units/turn^2
+- *max turn rate*: \pi/16
+- *rof (rate of fire)*: 1 bullet every 10 turns /(this might be too often)/
+
+** Asteroids
+
+- An asteroid is a circle.
+- Asteroids do not collide with eachother but do collide with ships
+  and bullets.
+- For looks in the visualizer an asteroid can be drawn as the
+  classical Asteroids rock but then the hit bubble should also be
+  drawn like the =bot-input2avi.sbcl= script does and as can be seen
+  in the YouTube movies.
+- There are currently 5 different kind of categories in the engine.
+- When a category 1 asteroid is hit by a bullet it disappears.
+- When a category 2+ asteroid is hit by a bullet it will break up into
+  one or more asteroids of a lower category which categories sum up to
+  the one of the asteroid that was broken up.  Examples:
+  - A category (C) 5 asteroid might break up in the following
+    asteroids: 1x C1 and 2x C2, or
+  - A category 5 asteroid might break up in the following asteroids:
+    5x C1, or
+  - A category 5 asteroid might break up in the following asteroids:
+    1x C3 and 1x C2.
+  - A category 4 asteroid might break up in the following asteroids:
+    2x C2, or
+  - A category 4 asteroid might break up in the following asteroids:
+    1x C1 and 1x C3.
+- The broken up asteroid pieces go in random directions and get random
+  speeds but no faster than an asteroid's max speed as mentioned
+  below.
+
+Default parameters:
+
+- *max speed*: 2 units/turn
+- *radius*: (category + 1)^2 units:
+  - category 1: 4 units
+  - category 2: 9 units
+  - category 3: 16 units
+  - category 4: 25 units
+  - category 5: 36 units
+
+** Bullets
+
+- Bullets are points in space, for collisions the engine checks
+  whether the point falls within the hit circle of an asteroid or
+  ship.
+- Bullets collide with asteroids and ships (also friendly ships!) but
+  not with other bullets.
+- Bullets are currently visualized als small circles with a 0.1 radius
+  (IIRC).
+
+Default parameters:
+
+- *damage*: 2 points
+- *speed*: 10 units/turn
+- *ttl (time to live)*: 12 turns
+
+
+* Starter Bots
+
+It is not yet determined what a good basic starter bot should be able
+to do.  Perhaps make some attempt at avoiding asteroids and other
+player's ships.
+
+** Provided Functions
+
+A starter bot should provide the following functions:
+
+- *asteroids*: returns a list[1] of all the asteroids.
+- *bullets*: returns a list of all the bullets.
+- *enemy-ships*: returns a list of all the enemy ships.
+- *issue-order*: issues an order, see [[Turn N (N >= 1): Ship Order]]
+- *finish-turn*: sends all the orders to the server and the
+  end-of-turn marker (currently "=go\n=").
+- *my-ship*: returns the player's ship.
+- *ray-intersects*: traces a ray from the supplied =x= and =y=
+  coordinates in the supplied =direction= and returns any game
+  entities that it hits.
+
+[1] or whatever is applicable for the programming language
+
+Should the starter bot also supply vector functions?
+
+
+* Client-Server Communication
+
+Currently there's not enough clarification of what the parameters do
+and mean, but if you run a game with input and output logging you
+ought to get a pretty good idea.
+
+** Server Output
+
+*** Turn 0: Game Parameters
+
+#+begin_example
+turn 0
+loadtime 3000
+turntime 1000
+player_id 0
+width 256
+height 256
+turns 512
+player_seed 812910668561579244
+ready
+#+end_example
+
+/needs an explanation of the parameters/
+
+*** Turns 1+: Game State
+
+#+begin_example
+turn N
+p 0 187.0 127.0 3.14159265359 0.0 0.0
+p 1 67.0 127.0 0.0 1.23456 0.12345
+b 1 70.0 120.0 0.0 40.0
+a 1 127.0 31.0 0.0 0.0
+a 2 31.0 127.0 0.0 0.0
+a 5 127.0 127.0 0.0 0.0
+go
+#+end_example
+
+**** Player: =p <player-id> <x> <y> <heading> <x-speed> <y-speed>=
+
+/needs an explanation of the parameters/
+
+**** Asteroid: =a <category> <x> <y> <heading> <speed>=
+
+/needs an explanation of the parameters/
+
+**** Bullet: =b <owner-id> <x> <y> <heading> <speed>=
+
+/needs an explanation of the parameters/
+
+** Player Output
+
+*** Turn 0: Ship Configuration
+
+This is an optional extra which isn't implemented in the engine yet.
+
+Setting the ship configuration is optional.  If no ship config is set
+all the settings will default to 2.
+
+#+begin_example
+ship_config 2 2 2 2 2 2 2
+go
+#+end_example
+
+Each config parameter must be either 1, 2 or 3.  The sum of all the
+parameters must be either equal or lower than 14 (number of
+parameters * 2).
+
+If any parameter value is illegal (less than 1 or greater than 3) all
+parameters are set to 2.
+
+**** ship\_config <hp> <thrust> <turn> <damage> <rof> <bullet-speed> <bullet-ttl>
+
+- *hp*: hit points
+  - 1: 1 hp
+  - 2: 2 hp /(default)/
+  - 3: 3 hp
+- *thrust*: max thrust
+  - 1: 0.4 units/s^2
+  - 2: 0.5 units/s^2 /(default)/
+  - 3: 0.6 units/s^2
+- *turn*: max turn rate (in radians)
+  - 1: \pi/14
+  - 2: \pi/16 /(default)/
+  - 3: \pi/18
+- *damage*: the damage a bullet does to an enemy ship
+  - 1: 1 point
+  - 2: 2 points /(default)/
+  - 3: 3 points
+- *rof*: rate of fire, how often the ship can fire a bullet
+  - 1: every  8 turns
+  - 2: every 10 turns /(default)/
+  - 3: every 12 turns
+- *bullet-speed*: how fast a bullet travels
+  - 1:  8 units/turn
+  - 2: 10 units/turn /(default)/
+  - 3: 12 units/turn
+- *bullet-ttl*: the max life time of a bullet
+  - 1: 10 turns
+  - 2: 12 turns /(default)/
+  - 3: 14 turns
+
+*** Turns 1+: Ship Order
+
+#+begin_example
+o 0.8 0.2 1
+go
+#+end_example
+
+**** o <thrust> <turn> <fire>
+
+- *thrust*: a fraction of the ship's max thrust
+  - a value between 0 and 1
+  - there is no negative thrust, if a ship wants to stop it will have
+    to turn around 180 degrees (\pi radians) and apply thrust
+- *turn*: a fraction of the ship's max turning rate
+  - a value between -1 and 1
+  - a value greater than 0 will turn the ship clockwise
+  - a value less than 0 will turn the ship counter-clockwise
+- *fire*: a boolean flag of either 0 or 1
+  - a value of 1 means the ship wants to fire this turn
+  - the server keeps track of whether the ships *can* fire: if a ship
+    gives a fire command but it cannot (due to a low ROF and having
+    fired last turn) the command will be ignored
