@@ -60,7 +60,7 @@ class Tron(Game):
         self.ranking_turn = 0
 
         # initialize size
-        self.height, self.width = map_data['size']
+        self.rows, self.cols = map_data['size']
 
         # for scenarios, the map file is followed exactly
 #This might be Ants-specific and removeable?
@@ -108,9 +108,9 @@ class Tron(Game):
         """ Called to build the map grid and mark initial obstacles
         """
         grid = []
-        for count_row in range(self.height):
+        for count_row in range(self.rows):
             new_row = []
-            for count_col in range(self.width):
+            for count_col in range(self.cols):
                 new_row.append(MAP_OBJECT[LAND])
             grid.append(new_row)
         for (row, col) in self.water:
@@ -363,7 +363,7 @@ class Tron(Game):
 
     def destination(self, loc, d):
         """ Returns the location produced by offsetting loc by d """
-        return ((loc[0] + d[0]) % self.height, (loc[1] + d[1]) % self.width)
+        return ((loc[0] + d[0]) % self.rows, (loc[1] + d[1]) % self.cols)
 
     def tron_orders(self, player):
         """ Enacts orders for the Tron game
@@ -574,8 +574,8 @@ class Tron(Game):
         result.append(['loadtime', self.loadtime])
         result.append(['turntime', self.turntime])
         result.append(['player_id', player])
-        result.append(['cols', self.width])
-        result.append(['rows', self.height])
+        result.append(['cols', self.cols])
+        result.append(['rows', self.rows])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
 #        result.append(['neutral_id', self.neutral_id])
@@ -702,7 +702,7 @@ class Tron(Game):
         
         replay['water'] = self.water
         ### 
-        replay['width'] = self.width
-        replay['height'] = self.height
+        replay['width'] = self.cols
+        replay['height'] = self.rows
         replay['data'] = self.replay_data
         return replay

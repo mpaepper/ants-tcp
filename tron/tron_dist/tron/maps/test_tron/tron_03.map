@@ -2,12 +2,16 @@
 # tron_01.map
 #
 width 10
-height 9
-players 2
-agents_per_player 1
+height 10
+players 3
+agents_per_player 2
 
 a 2 2 s 0
+a 2 1 s 0
 a 7 7 n 1
+a 7 8 n 1
+a 2 3 s 2
+a 2 4 s 2
 
 m ..........
 m ..........
@@ -17,5 +21,6 @@ m ..........
 m ..........
 m ..........
 m ..%.......
+m .%......%.
 m ..........
 
