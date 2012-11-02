@@ -6,12 +6,12 @@ height 10
 players 3
 agents_per_player 2
 
-a 0 2 2 s
-a 0 2 1 s
-a 1 7 7 n
-a 1 7 8 n
-a 2 2 3 s
-a 2 2 4 s
+a 2 2 s 0
+a 2 1 s 0
+a 7 7 n 1
+a 7 8 n 1
+a 2 3 s 2
+a 2 4 s 2
 
 m ..........
 m ..........

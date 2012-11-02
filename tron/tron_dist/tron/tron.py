@@ -157,10 +157,10 @@ class Tron(Game):
                 agents_per_player = int(value)
             elif key == "a":
                 values = value.split()
-                owner = int(values[0])
-                row = int(values[1])
-                col = int(values[2])
-                heading = (values[3])
+                row = int(values[0])
+                col = int(values[1])
+                heading = (values[2])
+                owner = int(values[3])
                 agents.append({"owner": owner,
                                "row" : row,
                                "col" : col,
