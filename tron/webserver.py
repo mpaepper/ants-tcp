@@ -185,9 +185,10 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(500, '%s' % (e,))
             return
         html = """
-            <html>
-            <head>
-	<title>Wargame visualizer</title>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>TRON : revisited : visualizer </title>
 	<style type="text/css">
 		html { margin:0; padding:0; }
 		body { margin:0; padding:0; overflow:hidden; background-color:#444}
@@ -232,6 +233,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			nturns = replay_data["replaydata"]["data"].length
 			player = replay_data["replaydata"]["players"]
 			scores = replay_data["replaydata"]["scores"]
+			water = replay_data["replaydata"]["water"]
 			sx = 600 / width
 			sy = 600 / height
 			//~ for ( i in im ) {
@@ -247,7 +249,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		}
 		function draw_frame(f) {
 			clear()
-			frame = replay_data["replaydata"]["data"][f]
 			V.fillStyle = 'white'
 			V.strokeStyle = 'white'
 			info = "turn "+the_turn + "  ["
@@ -258,41 +259,47 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			}
 			info += "]"
 			V.fillText(info, 260,10)
-			for (i in frame) {
-				var index = frame[i][1];
-				if (frame[i][0] == 't'){
-					group = frame[i][2];
-					if (group > 7)
-						group = 0;
-					else
-						group = 7 - group;
-					index = frame[i][5];
-					img = frame[i][1] + ":"
-					if (index > 7)
-						{index = 8;
-						img += "n:"}
-					else img += frame[i][5] + ":";
+			for (w_index=0; w_index < water.length; w_index++) {
+				w = water[w_index]
+				row = w[0]
+				col = w[1]
+				x = col * sx
+				y = row * sy
+				V.fillStyle = 'white'
+				V.fillRect(x,y,sx,sy)
+			}
+			for (iter_frame=0;iter_frame<f;iter_frame++) {
+				frame = replay_data["replaydata"]["data"][iter_frame]
+				for (i in frame) {
+					var index = frame[i][4];
+//					if (frame[i][0] == 'a')
+//						index = 8;
 					V.fillStyle = color[index]
-					V.strokeStyle = 'white'
-					img += frame[i][6]
-					x = frame[i][3] * sx
-					y = frame[i][4] * sy
-					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
-					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
-					r = 5
-					V.fillText(img, x,y)
-					V.beginPath();
-					V.arc(x,y, r*sx,begin_arc,end_arc,true);
-					V.closePath();
-					V.stroke();
-					V.beginPath();
-					V.fillStyle = color[group];
-					V.strokeStyle = color[group];
-					V.arc(x-sx,y-sx, sx, begin_arc, end_arc,true);
-					V.closePath();
-					V.stroke();
-
-					}
+//					V.strokeStyle = color[index]
+//					V.fillStyle = 'white'
+//					V.strokeStyle = 'white'
+//					V.fillRect(10, 10, 10, 10)
+//					img = frame[i][0] + frame[i][1]
+					x = frame[i][2] * sx
+					y = frame[i][1] * sy
+//					a = frame[i][4]
+//					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
+//					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
+	
+//					r = (frame[i][0]=="b" ? 2 :(frame[i][0]=="p" ? 5 : (frame[i][1]+1)*(frame[i][1]+1)))
+				//~ V.rotate(r)
+				//~ V.translate(x,y)
+//					V.fillText(img, x,y)
+//					V.beginPath();
+//					V.arc(x,y, r*sx,begin_arc,end_arc,true);
+//					V.closePath();
+					V.fillRect(x,y,sx,sy)
+//					V.stroke();
+				//~ V.translate(-x,-y)
+				//~ if ( im[img] && im[img].data )
+					//~ V.drawImage(im[img], x,y)
+				//~ V.rotate(-r)
+				}
 			}
 		}
         function stop() {
@@ -338,9 +345,8 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	<a href='javascript:forw()'>&gt;</a>&nbsp;
 	<a href='javascript:pos(nturns-1)'>&gt;&gt;</a>&nbsp;
 </div>
-#               <script>init();</script>
 </body>
-            </html>
+</html>
 """
 
 #            <body>
