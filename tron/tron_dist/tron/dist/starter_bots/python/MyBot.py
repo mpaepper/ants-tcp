@@ -39,7 +39,7 @@ class MyBot:
             # check if we still have time left to calculate more orders
             if tron.time_remaining() < 10:
                 break
-        tron.finish_turn()
+#        tron.finish_turn()
             
 if __name__ == '__main__':
     # psyco will speed up python a little, but is not needed
