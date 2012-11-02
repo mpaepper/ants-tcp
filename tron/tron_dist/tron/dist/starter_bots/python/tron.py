@@ -11,8 +11,6 @@ LAND = -2
 
 MAP_OBJECT = '.%'
 
-MY_AGENT = None
-
 HEADING = {'n': (-1, 0),
            'e': (0, 1),
            's': (1, 0),
@@ -40,6 +38,7 @@ class Tron():
         self.turntime = 0
         self.loadtime = 0
         self.player_id = None
+        self.my_agent = None
         self.turn_start_time = None
         self.turns = 0
 
@@ -62,7 +61,7 @@ class Tron():
                     self.loadtime = int(tokens[1])
                 elif key == 'player_id':
                     self.player_id = int(tokens[1])
-                    MY_AGENT = self.player_id
+                    self.my_agent = self.player_id
                 elif key == 'viewradius2':
                     self.viewradius2 = int(tokens[1])
                 elif key == 'attackradius2':
@@ -76,6 +75,9 @@ class Tron():
 
     def update(self, data):
         'parse engine input and update the game state'
+        # clear old values
+        self.agent_list = defaultdict(list)
+        self.dead_list = defaultdict(list)
         # start timer
         self.turn_start_time = time.time()
         
@@ -115,13 +117,13 @@ class Tron():
     def my_agents(self):
         'return a list of all my agents'
         return [(row, col) for (row, col), owner in self.agent_list.items()
-                    if owner == MY_AGENT]
+                    if owner == self.my_agent]
 
     def enemy_agents(self):
         'return a list of all visible enemy agents'
         return [((row, col), owner)
                     for (row, col), owner in self.agent_list.items()
-                    if owner != MY_AGENT]
+                    if owner != self.my_agent]
 
     def food(self):
         'return a list of all food locations'
@@ -204,6 +206,7 @@ class Tron():
                     map_data = ''
                 elif current_line.lower() == 'go':
                     tron.update(map_data)
+#                    print >> sys.stderr, tron.agent_list
                     # call the do_turn method of the class passed in
                     bot.do_turn(tron)
                     tron.finish_turn()
