@@ -188,7 +188,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>TRON : revisited : visualizer </title>
+	<title>TRON  revisited : visualizer </title>
 	<style type="text/css">
 		html { margin:0; padding:0; }
 		body { margin:0; padding:0; overflow:hidden; background-color:#444}

@@ -47,11 +47,6 @@ class Tron(Game):
         self.turn = 0
         self.num_players = map_data["players"]
         self.player_to_begin = randint(0, self.num_players)
-#        self.players = []
-#        for count in range(0, self.num_players):
-#            self.players.append(dict(zip(
-#                ["player_id", "finished_turn"],
-#                 [count, False])))
         # used to cutoff games early
         self.cutoff = None
         self.cutoff_bot = None # Can be ant owner, FOOD or LAND
@@ -109,6 +104,8 @@ class Tron(Game):
         self.replay_data = []
 
     def make_grid(self):
+        """ Called to build the map grid and mark initial obstacles
+        """
         grid = []
         for count_row in range(self.height):
             new_row = []
@@ -356,18 +353,20 @@ class Tron(Game):
                     if valid:
                         done = True
 
-    def unprocessed_orders_remain(self):
-        result = False
-        for player in range(self.num_players):
-            if player["finished_turn"] == False:
-                result = True
-        return result
+#    def unprocessed_orders_remain(self):
+#        result = False
+#        for player in range(self.num_players):
+#            if player["finished_turn"] == False:
+#                result = True
+#        return result
 
     def destination(self, loc, d):
         """ Returns the location produced by offsetting loc by d """
         return ((loc[0] + d[0]) % self.height, (loc[1] + d[1]) % self.width)
 
     def tron_orders(self, player):
+        """ Enacts orders for the Tron game
+        """
         player_orders = self.orders[player]
         done = False
         for order in player_orders:
@@ -379,6 +378,8 @@ class Tron(Game):
 
 
     def kill_overlap(self):
+        """ Kills agents who step onto the same square in the same turn
+        """
         unique = []
         for value in self.agent_destinations:
             if value not in unique:
@@ -387,6 +388,9 @@ class Tron(Game):
                 self.killed_agents.append(value)
 
     def pre_move_agents(self):
+        """ Process the portion of the agent's move which should take
+            place before the agent's location and map obstacles are updated.
+        """
         for agent in self.agents:
             row, col = agent["row"], agent["col"]
             heading = agent["heading"]
@@ -396,10 +400,14 @@ class Tron(Game):
             else: self.agent_destinations.append(dest)
 
     def mark_trail(self):
+        """ Mark trails as obstacles on the map
+        """
         for row, col in self.agent_destinations:
             self.grid[row][col] = MAP_OBJECT[WATER]
 
     def remove_killed(self):
+        """ Remove dead agents from the list of active ones
+        """
         remaining = []
         for agent in self.agents:
             if not (agent["row"], agent["col"]) in self.killed_agents:
@@ -407,6 +415,8 @@ class Tron(Game):
         self.agents = remaining
 
     def update_agents(self):
+        """ Update the agent's location in preparation for next turn
+        """
         for agent in self.agents:
             row, col = agent["row"], agent["col"]
             heading = agent["heading"]
@@ -482,31 +492,6 @@ class Tron(Game):
         # check if a rule change lengthens games needlessly
         if self.cutoff is None:
             self.cutoff = 'turn limit reached'
-
-#    def count_territories(self, player_id):
-#        result = 0
-#        for t in self.territory:
-#            if t["owner"] == player_id:
-#                result += 1
-#        return result
-
-#    def update_scores(self):
-#        for player in self.players:
-#            index = player["player_id"]
-#            self.score[index] = self.count_territories(index)
-
-#    def add_army_income(self, player):
-#        terri = self.count_territories(player["player_id"])
-#        income = max(self.min_income, int(terri / 3))
-#        bonus = self.complete_groups(self.player_groups(player))
-#        player["armies_to_place"] += (income + bonus) * self.base_unit
-
-#    def begin_player_turn(self, player):
-#        player["processed_this_turn"] = False
-#        player["finished_turn"] = False
-#        player["finished_deployment"] = False
-#        player["move_index"] = 0
-#        self.add_army_income(player)
 
     def start_turn(self):
         """ Called by engine at the start of the turn """
@@ -599,6 +584,8 @@ class Tron(Game):
         return self.render_changes(player)
 
     def living_agents(self, player):
+        """ Called to determine whether a player has living agents remaining
+        """
         count = 0
         for agent in self.agents:
             if agent["owner"] == player:
