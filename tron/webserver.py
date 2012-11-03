@@ -156,7 +156,8 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         <a href='/' name=top> Games </a> &nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/ranking'> Rankings </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/maps'> Maps </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <a href='/howto' title='get a client and connect to the game'> HowTo </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href='/howto' title='get a client and connect to the game'> TCP HowTo </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href='/trondoc' title='view documentation for Tron'> Tron game format </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </b>
         <input name=name title='search for player'></form>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <br>
@@ -185,10 +186,11 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(500, '%s' % (e,))
             return
         html = """
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>TRON  revisited : visualizer </title>
+	<title>TRON  revisited : visualizer</title>
 	<style type="text/css">
 		html { margin:0; padding:0; }
 		body { margin:0; padding:0; overflow:hidden; background-color:#444}
@@ -218,15 +220,15 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		V = C.getContext('2d');
 		the_turn = 0
 		var color = new Array(9);
-		color[0] = 'cyan';
-		color[1] = 'green';
-		color[2] = 'blue';
+		color[0] = 'green';
+		color[1] = 'blue';
+		color[2] = 'cyan';
 		color[3] = 'yellow';
-		color[4] = 'red';
-		color[5] = 'magenta';
-		color[6] = 'darkgray';
-		color[7] = 'purple';
-		color[8] = 'white';
+		color[4] = 'magenta';
+		color[5] = 'purple';
+		color[6] = 'white';
+		color[7] = 'darkgray';
+		color[8] = 'red';
 		function init() {
 			width  = replay_data["replaydata"]["width"]
 			height = replay_data["replaydata"]["height"]
@@ -249,39 +251,37 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		}
 		function draw_frame(f) {
 			clear()
-			V.fillStyle = 'white'
-			V.strokeStyle = 'white'
-			info = "turn "+the_turn + "  ["
-			for ( i=0; i<player; i++ ) {
-				info += scores[i][the_turn] 
-				if (i !=player-1)
-					info += ","
-			}
-			info += "]"
-			V.fillText(info, 260,10)
 			for (w_index=0; w_index < water.length; w_index++) {
 				w = water[w_index]
 				row = w[0]
 				col = w[1]
 				x = col * sx
 				y = row * sy
-				V.fillStyle = 'white'
+				V.fillStyle = 'darkgray'
 				V.fillRect(x,y,sx,sy)
 			}
 			for (iter_frame=0;iter_frame<f;iter_frame++) {
 				frame = replay_data["replaydata"]["data"][iter_frame]
 				for (i in frame) {
-					var index = frame[i][4];
-//					if (frame[i][0] == 'a')
-//						index = 8;
-					V.fillStyle = color[index]
+					x = frame[i][2] * sx
+					y = frame[i][1] * sy
+					if (frame[i][0] == 'a')
+					{
+						var index = frame[i][4];
+						V.fillStyle = color[index];
+						V.fillRect(x,y,sx,sy)
+					}
+					else if (frame[i][0] == 'd')
+					{
+						var index = frame[i][3];
+						V.fillStyle = 'red';
+						V.fillRect((x + sx / 4), (y + sy / 4) ,(sx / 2), (sy / 2))
+					}
 //					V.strokeStyle = color[index]
 //					V.fillStyle = 'white'
 //					V.strokeStyle = 'white'
 //					V.fillRect(10, 10, 10, 10)
 //					img = frame[i][0] + frame[i][1]
-					x = frame[i][2] * sx
-					y = frame[i][1] * sy
 //					a = frame[i][4]
 //					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
 //					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
@@ -293,7 +293,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 //					V.beginPath();
 //					V.arc(x,y, r*sx,begin_arc,end_arc,true);
 //					V.closePath();
-					V.fillRect(x,y,sx,sy)
 //					V.stroke();
 				//~ V.translate(-x,-y)
 				//~ if ( im[img] && im[img].data )
@@ -301,6 +300,16 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				//~ V.rotate(-r)
 				}
 			}
+			V.fillStyle = 'white'
+			V.strokeStyle = 'white'
+			info = "turn "+the_turn + "  ["
+			for ( i=0; i<player; i++ ) {
+				info += scores[i][the_turn] 
+				if (i !=player-1)
+					info += ","
+			}
+			info += "]"
+			V.fillText(info, 260,10)
 		}
         function stop() {
             clearInterval(tick)
@@ -347,7 +356,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 </div>
 </body>
 </html>
-"""
+
 
 #            <body>
 #               <script>init();</script>
@@ -541,6 +550,16 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         html += "</body></html>"
         self.wfile.write(html)
             
+    def serve_trondoc(self, match):
+        html = self.header( "HowTo", need_sort=False )
+        html += """
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Here is the documentation for Tron, such as it is right now:<br>
+        <pre>""" + open('io_format.txt','r').read() +"</pre>"
+        
+        html += self.footer()
+        html += "</body></html>"
+        self.wfile.write(html)
+
     def serve_howto(self, match):
         html = self.header( "HowTo", need_sort=False )
         html += """
@@ -588,6 +607,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 ('^\/ranking/p([0-9]?)', self.serve_ranking),
                 ('^\/ranking', self.serve_ranking),
                 ('^\/howto', self.serve_howto),
+                ('^\/trondoc', self.serve_trondoc),
                 ('^\/maps', self.serve_maps),
                 ('^\/map/(.*)', self.serve_map),
                 ('^\/search(.*)', self.serve_search),
