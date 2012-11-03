@@ -227,6 +227,9 @@ class Tron(Game):
         changes.extend(sorted(
             ['a', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.agents))
+        changes.extend(sorted(
+            ['d', a["row"], a["col"], a["owner"]]
+            for a in self.killed_agents))
         return changes
 
     def parse_orders(self, player, lines):
@@ -537,8 +540,8 @@ class Tron(Game):
         self.turn += 1
         self.orders = [[] for _ in range(self.num_players)]
         self.agent_destinations = []
-#        self.killed_agents = []
-#        self.killed_agent_locations = []
+        self.killed_agents = []
+        self.killed_agent_locations = []
 #        for player in self.players:
 #            self.begin_player_turn(player)
 
