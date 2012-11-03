@@ -65,7 +65,7 @@ class Tron():
                         self.setup_map()
                 elif key == 'rows':
                     self.rows = int(tokens[1])
-                    if not self.rows == None:
+                    if not self.cols == None:
                         self.setup_map()
                 elif key == 'player_seed':
                     random.seed(int(tokens[1]))
