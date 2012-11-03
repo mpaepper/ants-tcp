@@ -95,6 +95,7 @@ class Tron(Game):
         # to prevent errors
         self.orders = [[] for i in range(self.num_players)]
         self.agent_destination = []
+        self.killed_agent_locations = []
         self.killed_agents = []
         self.agents = deepcopy(map_data["agents"])
         self.water = deepcopy(map_data["water"])
@@ -406,7 +407,7 @@ class Tron(Game):
             if not location in unique:
                 unique.append(location)
             else:
-                self.killed_agents.append(value)
+                self.killed_agent_locations.append(value)
 
     def pre_move_agents(self):
         """ Process the portion of the agent's move which should take
@@ -417,7 +418,7 @@ class Tron(Game):
             heading = agent["heading"]
             dest = self.destination([row, col], HEADING[heading])
             if not self.grid[dest[0]][dest[1]] == LAND:
-                self.killed_agents.append([dest, agent["owner"]])
+                self.killed_agent_locations.append([dest, agent["owner"]])
             else: self.agent_destinations.append([dest, agent["owner"]])
 
     def mark_trail(self):
@@ -431,7 +432,7 @@ class Tron(Game):
             alive at the start of this turn gains one
         """
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agents]:
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agent_locations]:
                 for count in range(self.num_players):
                     if count == agent["owner"]:
                         self.score[count] -= 1
@@ -443,8 +444,8 @@ class Tron(Game):
         """
         remaining = []
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agents]:
-                pass
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agent_locations]:
+                self.killed_agents.append(agent)
             else:
                 remaining.append(agent)
         self.agents = remaining
@@ -534,6 +535,8 @@ class Tron(Game):
         self.turn += 1
         self.orders = [[] for _ in range(self.num_players)]
         self.agent_destinations = []
+#        self.killed_agents = []
+#        self.killed_agent_locations = []
 #        for player in self.players:
 #            self.begin_player_turn(player)
 
