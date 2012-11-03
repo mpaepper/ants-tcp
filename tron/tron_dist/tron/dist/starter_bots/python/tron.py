@@ -107,8 +107,8 @@ class Tron():
                     if tokens[0] == 'w':
                         self.map[row][col] = WATER
                     else:
-                        owner = int(tokens[4])
                         if tokens[0] == 'a':
+                            owner = int(tokens[4])
                             try:
                                 self.map[row][col] = owner
                                 self.agent_list[(row, col)] = owner
@@ -116,6 +116,7 @@ class Tron():
                                 sys.stderr.write(('IndexError at {0}, {1}'.format(row, col)))
                         elif tokens[0] == 'd':
                             # add to the dead list
+                            owner = int(tokens[3])
                             self.dead_list[(row, col)].append(owner)
                         
     def time_remaining(self):
