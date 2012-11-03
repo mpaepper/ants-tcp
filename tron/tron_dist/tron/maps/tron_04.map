@@ -4,10 +4,12 @@
 cols 10
 rows 18
 players 2
-agents_per_player 1
+agents_per_player 2
 
 a 2 2 s 0
-a 7 7 n 1
+a 7 7 n 0
+a 11 2 s 1
+a 16 7 n 1
 
 m ..........
 m ..........
