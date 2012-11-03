@@ -120,6 +120,8 @@ class Tron(Game):
                 grid[row][col] = WATER
             except IndexError:
                 raise Exception("row, col outside range ", row, col, grid)
+        for agent in self.agents:
+            grid[agent["row"]][agent["col"]] = agent["owner"]
         return grid
 
     def player_has_agent(self, player, row, col):
@@ -398,17 +400,6 @@ class Tron(Game):
 #                break
 #        return result
 
-    def kill_overlap(self):
-        """ Kills agents who step onto the same square in the same turn
-        """
-        unique = []
-        for value in self.agent_destinations:
-            location, owner = value
-            if not location in unique:
-                unique.append(location)
-            else:
-                self.killed_agent_locations.append(value)
-
     def pre_move_agents(self):
         """ Process the portion of the agent's move which should take
             place before the agent's location and map obstacles are updated.
@@ -420,6 +411,17 @@ class Tron(Game):
             if not self.grid[dest[0]][dest[1]] == LAND:
                 self.killed_agent_locations.append([dest, agent["owner"]])
             else: self.agent_destinations.append([dest, agent["owner"]])
+
+    def kill_overlap(self):
+        """ Kills agents who step onto the same square in the same turn
+        """
+        unique = []
+        for value in self.agent_destinations:
+            location, owner = value
+            if not location in unique:
+                unique.append(location)
+            else:
+                self.killed_agent_locations.append(value)
 
     def mark_trail(self):
         """ Mark trails as obstacles on the map
@@ -468,11 +470,11 @@ class Tron(Game):
                 self.tron_orders(player)
 #            else: self.killed[player] == True
         self.pre_move_agents()
-        self.mark_trail()
         self.kill_overlap()
+        self.update_agents()
         self.update_scores_for_agent_demise()
         self.remove_killed()
-        self.update_agents()
+        self.mark_trail()
 
     def remaining_players(self):
         """ Return the players still alive """
