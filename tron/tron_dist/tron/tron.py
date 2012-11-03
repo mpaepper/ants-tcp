@@ -112,11 +112,11 @@ class Tron(Game):
         for count_row in range(self.rows):
             new_row = []
             for count_col in range(self.cols):
-                new_row.append(MAP_OBJECT[LAND])
+                new_row.append(LAND)
             grid.append(new_row)
         for (row, col) in self.water:
             try:
-                grid[row][col] = MAP_OBJECT[WATER]
+                grid[row][col] = WATER
             except IndexError:
                 raise Exception("row, col outside range ", row, col, grid)
         return grid
@@ -389,14 +389,22 @@ class Tron(Game):
                     if agent["row"] == row and agent["col"] == col:
                         agent["heading"] = heading
 
+#    def unique_location(self, location, unique):
+#        result = True
+#        for (test_loc, _) in unique:
+#            if location == test_loc:
+#                result = False
+#                break
+#        return result
 
     def kill_overlap(self):
         """ Kills agents who step onto the same square in the same turn
         """
         unique = []
         for value in self.agent_destinations:
-            if value not in unique:
-                unique.append(value)
+            location, owner = value
+            if not location in unique:
+                unique.append(location)
             else:
                 self.killed_agents.append(value)
 
@@ -408,22 +416,22 @@ class Tron(Game):
             row, col = agent["row"], agent["col"]
             heading = agent["heading"]
             dest = self.destination([row, col], HEADING[heading])
-            if self.grid[dest[0]][dest[1]] == MAP_OBJECT[WATER]:
-                self.killed_agents.append(dest)
-            else: self.agent_destinations.append(dest)
+            if not self.grid[dest[0]][dest[1]] == LAND:
+                self.killed_agents.append([dest, agent["owner"]])
+            else: self.agent_destinations.append([dest, agent["owner"]])
 
     def mark_trail(self):
         """ Mark trails as obstacles on the map
         """
-        for row, col in self.agent_destinations:
-            self.grid[row][col] = MAP_OBJECT[WATER]
+        for (row, col), owner in self.agent_destinations:
+            self.grid[row][col] = owner
 
     def update_scores_for_agent_demise(self):
         """ When an agent dies, its owner loses a point and everybody else
             alive at the start of this turn gains one
         """
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in self.killed_agents:
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agents]:
                 for count in range(self.num_players):
                     if count == agent["owner"]:
                         self.score[count] -= 1
@@ -435,7 +443,7 @@ class Tron(Game):
         """
         remaining = []
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in self.killed_agents:
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agents]:
                 pass
             else:
                 remaining.append(agent)
