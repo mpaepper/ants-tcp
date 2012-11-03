@@ -100,6 +100,7 @@ class Tron(Game):
         self.water = deepcopy(map_data["water"])
 
         self.grid = self.make_grid()
+        self.verify_agent_starting_locations()
 #        raise Exception(self.grid)
         ### collect turns for the replay
         self.replay_data = []
