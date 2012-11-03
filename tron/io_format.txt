@@ -31,8 +31,8 @@ All of the above 'n' values are integers.
 
 Formatted communication lines:
 
-a r c h o		:	agent row col heading owner
-w r c			:	wall row col
+a r c h o	:	agent row col heading owner
+w r c		:	wall row col
 
 'r' and 'c' and 'o' are integers
 'h' is one of the four letters 'n', 'e', 's' and 'w' for the 
@@ -43,20 +43,53 @@ w r c			:	wall row col
 
 During game:
 
-a r c h o		:	agent row col heading owner
-d r c o			:	dead row col owner
+a r c h o	:	agent row col heading owner
+d r c h o	:	dead row col heading owner
 
 Players can see all walls and other agents, and they may have any 
 integer for a player ID.
 
+Example bot input:
+
+turn 0
+loadtime 3000
+turntime 1000
+player_id 0
+cols 10
+rows 10
+turns 1000
+player_seed -683903255894423924
+a 2 1 s 0
+a 2 2 s 0
+a 7 7 n 1
+a 7 8 n 1
+w 2 7
+w 7 2
+ready
+turn 1
+a 2 1 s 0
+a 2 2 s 0
+a 7 7 n 1
+a 7 8 n 1
+go
+
 Bot to server:
 
-o r c h			:	order row col heading
+o r c h		:	order row col heading
 
 This orders the agent at row, col to proceed in the direction specified 
 by heading. Having been set upon a course, you don't need to continue 
 issuing orders to maintain it; the agent will proceed until told to change 
 direction again.
+
+Example bot output:
+
+# turn 1
+o 2 1 n
+o 2 2 n
+# turn 2
+o 1 2 n
+o 1 1 n
 
 Map file format:
 
@@ -67,9 +100,9 @@ cols n
 players n
 agents_per_player n
 
-a r c h o		:	agent row col heading owner
+a r c h o	:	agent row col heading owner
 
-m .%			:	map land water
+m .%		:	map land water
 
 Example map file:
 
