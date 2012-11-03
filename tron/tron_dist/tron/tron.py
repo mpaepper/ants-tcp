@@ -224,6 +224,9 @@ class Tron(Game):
 #        changes.extend(sorted(
 #            ['p', p["player_id"]]
 #            for p in self.players if self.is_alive(p["player_id"])))
+        if self.turn == 1:
+            for row, col in self.water:
+                changes.append(['w', row, col])
         changes.extend(sorted(
             ['a', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.agents))
@@ -616,11 +619,6 @@ class Tron(Game):
 #        result.extend(sorted(
 #            ['c', c["a"], c["b"]]
 #            for c in self.connection))
-        result.extend(sorted(
-            ['a', a["row"], a["col"], a["heading"], a["owner"]]
-            for a in self.agents ))
-        for row, col in self.water:
-            result.append(['w', row, col])
         # information hidden from players
         #if player is None:
         #    result.append(['food_start', self.food_start])
