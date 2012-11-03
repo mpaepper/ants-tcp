@@ -95,6 +95,7 @@ class Tron(Game):
         # to prevent errors
         self.orders = [[] for i in range(self.num_players)]
         self.agent_destination = []
+        self.killed_agent_locations = []
         self.killed_agents = []
         self.agents = deepcopy(map_data["agents"])
         self.water = deepcopy(map_data["water"])
@@ -112,13 +113,15 @@ class Tron(Game):
         for count_row in range(self.rows):
             new_row = []
             for count_col in range(self.cols):
-                new_row.append(MAP_OBJECT[LAND])
+                new_row.append(LAND)
             grid.append(new_row)
         for (row, col) in self.water:
             try:
-                grid[row][col] = MAP_OBJECT[WATER]
+                grid[row][col] = WATER
             except IndexError:
                 raise Exception("row, col outside range ", row, col, grid)
+        for agent in self.agents:
+            grid[agent["row"]][agent["col"]] = agent["owner"]
         return grid
 
     def player_has_agent(self, player, row, col):
@@ -224,6 +227,9 @@ class Tron(Game):
         changes.extend(sorted(
             ['a', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.agents))
+        changes.extend(sorted(
+            ['d', a["row"], a["col"], a["owner"]]
+            for a in self.killed_agents))
         return changes
 
     def parse_orders(self, player, lines):
@@ -389,16 +395,13 @@ class Tron(Game):
                     if agent["row"] == row and agent["col"] == col:
                         agent["heading"] = heading
 
-
-    def kill_overlap(self):
-        """ Kills agents who step onto the same square in the same turn
-        """
-        unique = []
-        for value in self.agent_destinations:
-            if value not in unique:
-                unique.append(value)
-            else:
-                self.killed_agents.append(value)
+#    def unique_location(self, location, unique):
+#        result = True
+#        for (test_loc, _) in unique:
+#            if location == test_loc:
+#                result = False
+#                break
+#        return result
 
     def pre_move_agents(self):
         """ Process the portion of the agent's move which should take
@@ -408,22 +411,33 @@ class Tron(Game):
             row, col = agent["row"], agent["col"]
             heading = agent["heading"]
             dest = self.destination([row, col], HEADING[heading])
-            if self.grid[dest[0]][dest[1]] == MAP_OBJECT[WATER]:
-                self.killed_agents.append(dest)
-            else: self.agent_destinations.append(dest)
+            if not self.grid[dest[0]][dest[1]] == LAND:
+                self.killed_agent_locations.append([dest, agent["owner"]])
+            else: self.agent_destinations.append([dest, agent["owner"]])
+
+    def kill_overlap(self):
+        """ Kills agents who step onto the same square in the same turn
+        """
+        unique = []
+        for value in self.agent_destinations:
+            location, owner = value
+            if not location in unique:
+                unique.append(location)
+            else:
+                self.killed_agent_locations.append(value)
 
     def mark_trail(self):
         """ Mark trails as obstacles on the map
         """
-        for row, col in self.agent_destinations:
-            self.grid[row][col] = MAP_OBJECT[WATER]
+        for (row, col), owner in self.agent_destinations:
+            self.grid[row][col] = owner
 
     def update_scores_for_agent_demise(self):
         """ When an agent dies, its owner loses a point and everybody else
             alive at the start of this turn gains one
         """
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in self.killed_agents:
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agent_locations]:
                 for count in range(self.num_players):
                     if count == agent["owner"]:
                         self.score[count] -= 1
@@ -435,8 +449,8 @@ class Tron(Game):
         """
         remaining = []
         for agent in self.agents:
-            if (agent["row"], agent["col"]) in self.killed_agents:
-                pass
+            if (agent["row"], agent["col"]) in [(r, c) for (r, c), _ in self.killed_agent_locations]:
+                self.killed_agents.append(agent)
             else:
                 remaining.append(agent)
         self.agents = remaining
@@ -459,11 +473,11 @@ class Tron(Game):
                 self.tron_orders(player)
 #            else: self.killed[player] == True
         self.pre_move_agents()
-        self.mark_trail()
         self.kill_overlap()
+        self.update_agents()
         self.update_scores_for_agent_demise()
         self.remove_killed()
-        self.update_agents()
+        self.mark_trail()
 
     def remaining_players(self):
         """ Return the players still alive """
@@ -516,6 +530,9 @@ class Tron(Game):
 #                self.score[player] += self.bonus[player]
 
         self.calc_significant_turns()
+        for i, s in enumerate(self.score):
+            self.score_history[i].append(s)
+        self.replay_data.append( self.get_state_changes() )
 
         # check if a rule change lengthens games needlessly
         if self.cutoff is None:
@@ -526,6 +543,8 @@ class Tron(Game):
         self.turn += 1
         self.orders = [[] for _ in range(self.num_players)]
         self.agent_destinations = []
+        self.killed_agents = []
+        self.killed_agent_locations = []
 #        for player in self.players:
 #            self.begin_player_turn(player)
 
