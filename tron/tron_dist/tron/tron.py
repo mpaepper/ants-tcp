@@ -530,6 +530,7 @@ class Tron(Game):
 #                self.score[player] += self.bonus[player]
 
         self.calc_significant_turns()
+        self.replay_data.append( self.get_state_changes() )
 
         # check if a rule change lengthens games needlessly
         if self.cutoff is None:
