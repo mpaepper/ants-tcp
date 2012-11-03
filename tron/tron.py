@@ -609,6 +609,8 @@ class Tron(Game):
         result.append(['rows', self.rows])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
+        for row, col in self.water:
+            result.append(['w', row, col])
 #        result.append(['neutral_id', self.neutral_id])
 #        result.extend(sorted(
 #            ['t', t["territory_id"], t["group"], t["x"], t["y"], t["owner"], t["armies"]]
@@ -616,11 +618,6 @@ class Tron(Game):
 #        result.extend(sorted(
 #            ['c', c["a"], c["b"]]
 #            for c in self.connection))
-        result.extend(sorted(
-            ['a', a["row"], a["col"], a["heading"], a["owner"]]
-            for a in self.agents ))
-        for row, col in self.water:
-            result.append(['w', row, col])
         # information hidden from players
         #if player is None:
         #    result.append(['food_start', self.food_start])
