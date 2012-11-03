@@ -228,7 +228,7 @@ class Tron(Game):
             ['a', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.agents))
         changes.extend(sorted(
-            ['d', a["row"], a["col"], a["owner"]]
+            ['d', a["row"], a["col"], a["heading"], a["owner"]]
             for a in self.killed_agents))
         return changes
 

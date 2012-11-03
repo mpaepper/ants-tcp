@@ -116,7 +116,7 @@ class Tron():
                                 sys.stderr.write(('IndexError at {0}, {1}'.format(row, col)))
                         elif tokens[0] == 'd':
                             # add to the dead list
-                            owner = int(tokens[3])
+                            owner = int(tokens[4])
                             self.dead_list[(row, col)].append(owner)
                         
     def time_remaining(self):

@@ -273,7 +273,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					}
 					else if (frame[i][0] == 'd')
 					{
-						var index = frame[i][3];
+						var index = frame[i][4];
 						V.fillStyle = 'red';
 						V.fillRect((x + sx / 4), (y + sy / 4) ,(sx / 2), (sy / 2))
 					}
