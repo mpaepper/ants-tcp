@@ -100,6 +100,7 @@ class Tron(Game):
         self.water = deepcopy(map_data["water"])
 
         self.grid = self.make_grid()
+        self.verify_agent_starting_locations()
 #        raise Exception(self.grid)
         ### collect turns for the replay
         self.replay_data = []
@@ -126,6 +127,12 @@ class Tron(Game):
             if agent["owner"] == player and agent["row"] == row and agent["col"] == col:
                 result = True
         return result
+
+    def verify_agent_starting_locations(self):
+        for agent in self.agents:
+            row, col = agent["row"], agent["col"]
+            if row < 0 or col < 0 or row >= self.rows or col >= self.cols:
+                raise Exception("Agent at {0}, {1} is out of bounds".format(row, col))
 
     def parse_map(self, map_text):
         """ Parse the map_text into a more friendly data structure """

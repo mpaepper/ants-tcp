@@ -60,7 +60,7 @@ class Tron(Game):
         self.ranking_turn = 0
 
         # initialize size
-        self.height, self.width = map_data['size']
+        self.rows, self.cols = map_data['size']
 
         # for scenarios, the map file is followed exactly
 #This might be Ants-specific and removeable?
@@ -108,16 +108,16 @@ class Tron(Game):
         """ Called to build the map grid and mark initial obstacles
         """
         grid = []
-        for count_row in range(self.height):
+        for count_row in range(self.rows):
             new_row = []
-            for count_col in range(self.width):
+            for count_col in range(self.cols):
                 new_row.append(MAP_OBJECT[LAND])
             grid.append(new_row)
         for (row, col) in self.water:
             try:
                 grid[row][col] = MAP_OBJECT[WATER]
             except IndexError:
-                raise Exception("row, col outside range ", row, col, self.water)
+                raise Exception("row, col outside range ", row, col, grid)
         return grid
 
     def player_has_agent(self, player, row, col):
@@ -127,10 +127,16 @@ class Tron(Game):
                 result = True
         return result
 
+    def verify_agent_starting_locations(self):
+        for agent in self.agents:
+            row, col = agent["row"], agent["col"]
+            if row < 0 or col < 0 or row >= self.rows or col >= self.cols:
+                raise Exception("Agent at {0}, {1} is out of bounds".format(row, col))
+
     def parse_map(self, map_text):
         """ Parse the map_text into a more friendly data structure """
-        width = None
-        height = None
+        cols = None
+        rows = None
         agents_per_player = None
         agents = []
         water = []
@@ -147,20 +153,20 @@ class Tron(Game):
             key, value = line.split(" ", 1)
             key = key.lower()
 
-            if key == "width":
-                width = int(value)
-            elif key == "height":
-                height = int(value)
+            if key == "cols":
+                cols = int(value)
+            elif key == "rows":
+                rows = int(value)
             elif key == "players":
                 num_players = int(value)
             elif key == "agents_per_player":
                 agents_per_player = int(value)
             elif key == "a":
                 values = value.split()
-                owner = int(values[0])
-                row = int(values[1])
-                col = int(values[2])
-                heading = (values[3])
+                row = int(values[0])
+                col = int(values[1])
+                heading = (values[2])
+                owner = int(values[3])
                 agents.append({"owner": owner,
                                "row" : row,
                                "col" : col,
@@ -169,7 +175,7 @@ class Tron(Game):
                 if num_players is None:
                     raise Exception("map",
                                     "players count expected before map lines")
-                if len(value) != width:
+                if len(value) != cols:
                     raise Exception("map",
                                     "Incorrect number of cols in row %s. "
                                     "Got %s, expected %s."
@@ -181,8 +187,13 @@ class Tron(Game):
                         raise Exception("map",
                                         "Invalid character in map: %s" % c)
                 count_row += 1
+        if count_row != rows:
+                    raise Exception("map",
+                                    "Incorrect number of rows in map "
+                                    "Got %s, expected %s."
+                                    %(count_row, rows))
         return {
-            "size":      (width, height),
+            "size": (rows, cols),
             "agents_per_player": agents_per_player,
             "agents": agents,
             "players": num_players,
@@ -363,7 +374,7 @@ class Tron(Game):
 
     def destination(self, loc, d):
         """ Returns the location produced by offsetting loc by d """
-        return ((loc[0] + d[0]) % self.height, (loc[1] + d[1]) % self.width)
+        return ((loc[0] + d[0]) % self.rows, (loc[1] + d[1]) % self.cols)
 
     def tron_orders(self, player):
         """ Enacts orders for the Tron game
@@ -574,8 +585,8 @@ class Tron(Game):
         result.append(['loadtime', self.loadtime])
         result.append(['turntime', self.turntime])
         result.append(['player_id', player])
-        result.append(['cols', self.width])
-        result.append(['rows', self.height])
+        result.append(['cols', self.cols])
+        result.append(['rows', self.rows])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
 #        result.append(['neutral_id', self.neutral_id])
@@ -702,7 +713,7 @@ class Tron(Game):
         
         replay['water'] = self.water
         ### 
-        replay['width'] = self.width
-        replay['height'] = self.height
+        replay['width'] = self.cols
+        replay['height'] = self.rows
         replay['data'] = self.replay_data
         return replay
