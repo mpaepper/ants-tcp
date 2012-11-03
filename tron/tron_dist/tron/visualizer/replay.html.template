@@ -111,6 +111,7 @@
 					//~ V.drawImage(im[img], x,y)
 				//~ V.rotate(-r)
 				}
+			}
 			V.fillStyle = 'white'
 			V.strokeStyle = 'white'
 			info = "turn "+the_turn + "  ["
@@ -121,7 +122,6 @@
 			}
 			info += "]"
 			V.fillText(info, 260,10)
-			}
 		}
         function stop() {
             clearInterval(tick)
