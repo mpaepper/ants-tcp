@@ -605,8 +605,8 @@ class Tron(Game):
         result.append(['loadtime', self.loadtime])
         result.append(['turntime', self.turntime])
         result.append(['player_id', player])
-        result.append(['cols', self.cols])
         result.append(['rows', self.rows])
+        result.append(['cols', self.cols])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
         for row, col in self.water:
