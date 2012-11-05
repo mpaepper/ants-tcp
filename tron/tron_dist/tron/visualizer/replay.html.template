@@ -91,7 +91,7 @@
 			sy = scale;
 			display_width = cols * sx;
 			display_height = rows * sy
-			C.setSize(display_width, display_height);
+			C.setSize(display_width, display_height); // don't know if this is actually doing anything
 //			sx = 600 / width;
 //			sy = 600 / height;
 			//~ for ( i in im ) {

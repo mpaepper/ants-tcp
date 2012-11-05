@@ -186,6 +186,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(500, '%s' % (e,))
             return
         html = """
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -201,9 +202,9 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 <body>
 <p>
 <center>
-<canvas width=600 height=600 id="C">
+<canvas width=900 height=700 id="C">
 	<script type="text/javascript">
-		replay_data = """ + replaydata + """;
+		replay_data = ## REPLAY PLACEHOLDER ##;
 //		replay_data = {"status": ["eliminated", "eliminated"]};
 		//~ im = {
 			//~ "p0" : "visualizer/p0.png",
@@ -218,6 +219,18 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		//~ }
 		C = document.getElementById('C');
 		V = C.getContext('2d');
+		C.setSize = function(width, height) {
+		        if (this.w !== width || this.h !== height) {
+		                this.w = width;
+		                this.h = height;
+//		                if (width > 0 && height > 0) {
+//		                        this.canvas.width = width;
+//		                        this.canvas.height = height;
+//              		}
+	                this.invalid = true;
+        	        this.resized = true;
+	        	}
+		};
 		the_turn = 0;
 		color = new Array(10);
 		color[0] = [0, 0, 255];
@@ -254,8 +267,22 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			player = replay_data["replaydata"]["players"];
 			scores = replay_data["replaydata"]["scores"];
 			water = replay_data["replaydata"]["water"];
-			sx = 600 / width;
-			sy = 600 / height;
+			rows = replay_data["replaydata"]["rows"];
+			cols = replay_data["replaydata"]["cols"];
+			max_width = 900
+			max_height = 700
+			max_display_width = Math.min(max_width, 50 * cols)
+			max_display_height = Math.min(max_height, 50 * rows)
+			max_sx = max_display_width / cols;
+			max_sy = max_display_height / rows;
+			scale = Math.min(max_sx, max_sy);
+			sx = scale;
+			sy = scale;
+			display_width = cols * sx;
+			display_height = rows * sy
+			C.setSize(display_width, display_height); // don't know if this is actually doing anything
+//			sx = 600 / width;
+//			sy = 600 / height;
 			//~ for ( i in im ) {
 				//~ s = im[i]
 				//~ im[i] = new Image()
@@ -265,7 +292,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		}
 		function clear() {
 			V.fillStyle = 'black';
-			V.fillRect(0,0,600,600);
+			V.fillRect(0,0,display_width,display_height);
 		}
 		function draw_frame(f) {
 			clear()
@@ -398,186 +425,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 
-
-
-
-
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>TRON  revisited : visualizer</title>
-	<style type="text/css">
-		html { margin:0; padding:0; }
-		body { margin:0; padding:0; overflow:hidden; background-color:#444}
-		a { color:#777 }
-		a:hover { color:#ddd }
-	</style>
-</head>
-<body>
-<p>
-<center>
-<canvas width=600 height=600 id="C">
-	<script type="text/javascript">
-		replay_data = """ + replaydata + """;
-		
-		//~ im = {
-			//~ "p0" : "visualizer/p0.png",
-			//~ "p1" : "visualizer/p1.png",
-			//~ "a0" : "visualizer/a0.png",
-			//~ "a1" : "visualizer/a1.png",
-			//~ "a2" : "visualizer/a2.png",
-			//~ "a3" : "visualizer/a3.png",
-			//~ "a4" : "visualizer/a2.png",
-			//~ "b0" : "visualizer/b0.png",
-			//~ "b1" : "visualizer/b1.png",
-		//~ }
-		C = document.getElementById('C')
-		V = C.getContext('2d');
-		the_turn = 0
-		var color = new Array(9);
-		color[0] = 'green';
-		color[1] = 'blue';
-		color[2] = 'cyan';
-		color[3] = 'yellow';
-		color[4] = 'magenta';
-		color[5] = 'purple';
-		color[6] = 'white';
-		color[7] = 'darkgray';
-		color[8] = 'red';
-		function init() {
-			width  = replay_data["replaydata"]["width"]
-			height = replay_data["replaydata"]["height"]
-			nturns = replay_data["replaydata"]["data"].length
-			player = replay_data["replaydata"]["players"]
-			scores = replay_data["replaydata"]["scores"]
-			water = replay_data["replaydata"]["water"]
-			sx = 600 / width
-			sy = 600 / height
-			//~ for ( i in im ) {
-				//~ s = im[i]
-				//~ im[i] = new Image()
-				//~ im[i].src = s
-			//~ }
-			play()
-		}
-		function clear() {
-			V.fillStyle = 'black'
-			V.fillRect(0,0,600,600)
-		}
-		function draw_frame(f) {
-			clear()
-			for (w_index=0; w_index < water.length; w_index++) {
-				w = water[w_index]
-				row = w[0]
-				col = w[1]
-				x = col * sx
-				y = row * sy
-				V.fillStyle = 'darkgray'
-				V.fillRect(x,y,sx,sy)
-			}
-			for (iter_frame=0;iter_frame<f;iter_frame++) {
-				frame = replay_data["replaydata"]["data"][iter_frame]
-				for (i in frame) {
-					x = frame[i][2] * sx
-					y = frame[i][1] * sy
-					if (frame[i][0] == 'a')
-					{
-						var index = frame[i][4];
-						V.fillStyle = color[index];
-						V.fillRect(x,y,sx,sy)
-					}
-					else if (frame[i][0] == 'd')
-					{
-						var index = frame[i][4];
-						V.fillStyle = 'red';
-						V.fillRect((x + sx / 4), (y + sy / 4) ,(sx / 2), (sy / 2))
-					}
-//					V.strokeStyle = color[index]
-//					V.fillStyle = 'white'
-//					V.strokeStyle = 'white'
-//					V.fillRect(10, 10, 10, 10)
-//					img = frame[i][0] + frame[i][1]
-//					a = frame[i][4]
-//					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
-//					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
-	
-//					r = (frame[i][0]=="b" ? 2 :(frame[i][0]=="p" ? 5 : (frame[i][1]+1)*(frame[i][1]+1)))
-				//~ V.rotate(r)
-				//~ V.translate(x,y)
-//					V.fillText(img, x,y)
-//					V.beginPath();
-//					V.arc(x,y, r*sx,begin_arc,end_arc,true);
-//					V.closePath();
-//					V.stroke();
-				//~ V.translate(-x,-y)
-				//~ if ( im[img] && im[img].data )
-					//~ V.drawImage(im[img], x,y)
-				//~ V.rotate(-r)
-				}
-			}
-			V.fillStyle = 'white'
-			V.strokeStyle = 'white'
-			info = "turn "+the_turn + "  ["
-			for ( i=0; i<player; i++ ) {
-				info += scores[i][the_turn] 
-				if (i !=player-1)
-					info += ","
-			}
-			info += "]"
-			V.fillText(info, 260,10)
-		}
-        function stop() {
-            clearInterval(tick)
-            tick=-1
-        }
-        function back() {
-            stop()
-            if ( the_turn > 0 ) 
-                the_turn -= 1
-            draw_frame(the_turn)
-        }
-        function forw() {
-            stop()
-            if ( the_turn < nturns-1 ) 
-                the_turn += 1
-            draw_frame(the_turn)
-        }
-        function pos(t) {
-            stop()
-            the_turn = t
-            draw_frame(the_turn)
-        }
-        function play() {
-            tick = setInterval( function() {
-                if (the_turn < nturns)
-                {
-                    draw_frame(the_turn)
-                    the_turn += 1
-                } else {
-                    stop()
-                }
-            },200)
-        }
-		init()
-	</script>
-</canvas>
-<div>
-	<a href='javascript:pos(0)'>&lt;&lt;</a>&nbsp;
-	<a href='javascript:back()'>&lt;</a>&nbsp;
-	<a href='javascript:stop()'>stop</a>&nbsp;
-	<a href='javascript:play()'>play</a>&nbsp;
-	<a href='javascript:forw()'>&gt;</a>&nbsp;
-	<a href='javascript:pos(nturns-1)'>&gt;&gt;</a>&nbsp;
-</div>
-</body>
-</html>
-
-
-#            <body>
-#               <script>init();</script>
-#            </body>
-#            </html>
 #            """
         self.send_head()
         self.wfile.write(html)
