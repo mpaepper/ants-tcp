@@ -1,22 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-	<title>TRON  revisited : visualizer</title>
-	<style type="text/css">
-		html { margin:0; padding:0; }
-		body { margin:0; padding:0; overflow:hidden; background-color:#444}
-		a { color:#777 }
-		a:hover { color:#ddd }
-	</style>
-</head>
-<body>
-<p>
-<center>
-<canvas width=600 height=600 id="C">
-	<script type="text/javascript">
-		replay_data = ## REPLAY PLACEHOLDER ##;
-//		replay_data = {"status": ["eliminated", "eliminated"]};
+//		replay_data = ## REPLAY PLACEHOLDER ##;
+		replay_data = {"status": ["eliminated", "eliminated"]};
 		//~ im = {
 			//~ "p0" : "visualizer/p0.png",
 			//~ "p1" : "visualizer/p1.png",
@@ -31,25 +14,21 @@
 		C = document.getElementById('C');
 		V = C.getContext('2d');
 		the_turn = 0;
-		color = new Array(10);
-		color[0] = [0, 0, 255];
-		color[1] = [0, 255, 0];
-		color[2] = [255, 255, 0];
-		color[3] = [0, 255, 255];
-		color[4] = [128, 128, 255];
-		color[5] = [128, 0, 255];
-		color[6] = [0, 128, 255];
-		color[7] = [128, 255, 128];
-		color[8] = [255, 0, 0];
-		color[9] = [128, 128, 128];
-		dir = {"n": [-1, 0],
-		       "s": [1, 0],
-		       "e": [0, 1],
-		       "w": [0, -1]};
-		revdir = {"n": [0, 1],
-			  "s": [0, -1],
-			  "e": [-1, 0],
-			  "w": [1, 0]};
+		Array.prototype.set_color=function(r, g, b)
+		{
+			this[0] = r;
+			this[1] = g;
+			this[2] = b;
+		}
+		var color = new Array(10);
+		for (i=0;i<10;i++) {
+			color[i] = new Array(3);
+			color[i].set_color(255, 0, 0);
+		}
+		color[0].set_color(0, 0, 255);
+		color[1].set_color(0, 255, 0);
+		color[2].set_color(255, 255, 0);
+		color[3].set_color(128, 255, 128);
 //		color[0] = 'green';
 //		color[1] = 'blue';
 //		color[2] = 'cyan';
@@ -59,6 +38,7 @@
 //		color[6] = 'white';
 //		color[7] = 'darkgray';
 //		color[8] = 'red';
+		color[0] = 
 		function init() {
 			width  = replay_data["replaydata"]["width"];
 			height = replay_data["replaydata"]["height"];
@@ -98,31 +78,15 @@
 					if (frame[i][0] == 'a')
 					{
 						var index = frame[i][4];
-						alpha = 0.6;
-						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
-						V.fillRect(x,y,sx,sy);
-						alpha = 0.8;
-						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
-						x1 = x + sx / 4;
-						y1 = y + sy / 4;
-						w = sx / 2;
-						h = sy / 2;
-						V.fillRect(x1,y1,w,h)
-						if (iter_frame != 0)
-							{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
+						alpha = 196
+						V.fillStyle = transp_color(index, alpha);
+						V.fillRect(x,y,sx,sy)
 					}
 					else if (frame[i][0] == 'd')
 					{
 						var index = frame[i][4];
 						V.fillStyle = 'red';
 						V.fillRect((x + sx / 4), (y + sy / 4) ,(sx / 2), (sy / 2))
-						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
-						x1 = x + sx / 4;
-						y1 = y + sy / 4;
-						w = sx / 2;
-						h = sy / 2;
-						if (iter_frame != 0)
-							{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
 					}
 //					V.strokeStyle = color[index]
 //					V.fillStyle = 'white'
@@ -158,7 +122,9 @@
 			info += "]"
 			V.fillText(info, 260,10)
 		}
-//        }
+        function transp_color(index, alpha) {
+		return (color[index][0], color[index][1], color[index][2], alpha)
+        }
         function stop() {
             clearInterval(tick)
             tick=-1
@@ -192,15 +158,3 @@
             },200)
         }
 		init()
-	</script>
-</canvas>
-<div>
-	<a href='javascript:pos(0)'>&lt;&lt;</a>&nbsp;
-	<a href='javascript:back()'>&lt;</a>&nbsp;
-	<a href='javascript:stop()'>stop</a>&nbsp;
-	<a href='javascript:play()'>play</a>&nbsp;
-	<a href='javascript:forw()'>&gt;</a>&nbsp;
-	<a href='javascript:pos(nturns-1)'>&gt;&gt;</a>&nbsp;
-</div>
-</body>
-</html>
