@@ -720,6 +720,8 @@ class Tron(Game):
         replay['turns'] = self.turns
         replay['engine_seed'] = self.engine_seed
         replay['player_seed'] = self.player_seed
+        replay['rows'] = self.rows
+        replay['cols'] = self.cols
 
         # scores
         replay['scores'] = self.score_history
