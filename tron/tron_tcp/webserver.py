@@ -204,7 +204,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 <center>
 <canvas width=900 height=700 id="C">
 	<script type="text/javascript">
-		replay_data = ## REPLAY PLACEHOLDER ##;
+		replay_data = """ + replaydata + """;
 //		replay_data = {"status": ["eliminated", "eliminated"]};
 		//~ im = {
 			//~ "p0" : "visualizer/p0.png",
@@ -419,11 +419,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 </div>
 </body>
 </html>
-
-
-
-
-
 
 #            """
         self.send_head()
