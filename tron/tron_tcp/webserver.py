@@ -204,18 +204,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 <canvas width=900 height=700 id="C">
 	<script type="text/javascript">
 		replay_data = """ + replaydata + """;
-//		replay_data = {"status": ["eliminated", "eliminated"]};
-		//~ im = {
-			//~ "p0" : "visualizer/p0.png",
-			//~ "p1" : "visualizer/p1.png",
-			//~ "a0" : "visualizer/a0.png",
-			//~ "a1" : "visualizer/a1.png",
-			//~ "a2" : "visualizer/a2.png",
-			//~ "a3" : "visualizer/a3.png",
-			//~ "a4" : "visualizer/a2.png",
-			//~ "b0" : "visualizer/b0.png",
-			//~ "b1" : "visualizer/b1.png",
-		//~ }
 		C = document.getElementById('C');
 		V = C.getContext('2d');
 		C.setSize = function(width, height) {
@@ -250,15 +238,10 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			  "s": [0, -1],
 			  "e": [-1, 0],
 			  "w": [1, 0]};
-//		color[0] = 'green';
-//		color[1] = 'blue';
-//		color[2] = 'cyan';
-//		color[3] = 'yellow';
-//		color[4] = 'magenta';
-//		color[5] = 'purple';
-//		color[6] = 'white';
-//		color[7] = 'darkgray';
-//		color[8] = 'red';
+		arrow = {"n": [[0, 1], [0.5, 0.5], [1, 1]],
+			 "s": [[0, 0], [0.5, 0.5], [1, 0]],
+			 "e": [[0, 0], [0.5, 0.5], [0, 1]],
+			 "w": [[1, 0], [0.5, 0.5], [1, 1]]};
 		function init() {
 			width  = replay_data["replaydata"]["width"];
 			height = replay_data["replaydata"]["height"];
@@ -280,13 +263,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			display_width = cols * sx;
 			display_height = rows * sy
 			C.setSize(display_width, display_height); // don't think this is actually doing anything
-//			sx = 600 / width;
-//			sy = 600 / height;
-			//~ for ( i in im ) {
-				//~ s = im[i]
-				//~ im[i] = new Image()
-				//~ im[i].src = s
-			//~ }
 			play();
 		}
 		function clear() {
@@ -312,25 +288,27 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					if (frame[i][0] == 'a')
 					{
 						var index = frame[i][4];
-						alpha = fade(0.4, 0.8, 5, (the_turn - iter_frame))
+						alpha = fade(0.4, 0.8, 2, (the_turn - iter_frame))
 						set_color(index, alpha)
-						V.fillRect(x,y,sx,sy);
-						alpha = fade(0.6, 1, 5, (the_turn - iter_frame))
+						if (iter_frame != 0)
+							V.fillRect(x,y,sx,sy);
+						alpha = fade(0.6, 1, 2, (the_turn - iter_frame))
 						set_color(index, alpha)
-						paint_trail(frame[i], x, y)
+						paint_trail(frame[i], x, y, iter_frame)
 					}
 					else if (frame[i][0] == 'd')
 					{
 						var index = frame[i][4];
 						V.fillStyle = 'red';
 						V.fillRect((x + sx / 4), (y + sy / 4) ,(sx / 2), (sy / 2))
+						alpha = 0.8
 						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
 						x1 = x + sx / 4;
 						y1 = y + sy / 4;
 						w = sx / 2;
 						h = sy / 2;
-						if (iter_frame != 0)
-							{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
+//						if (iter_frame != 0)
+						{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
 					}
 				}
 			}
@@ -349,13 +327,24 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			info += "]"
 			V.fillText(info, 260,10)
 	}
-	function paint_trail(agent, x, y) {
+	function paint_trail(agent, x, y, iter_frame) {
 		x1 = x + sx / 4;
 		y1 = y + sy / 4;
 		w = sx / 2;
 		h = sy / 2;
 		V.fillRect(x1,y1,w,h)
-		V.fillRect((x1 + (sx / 2) * revdir[agent[3]][0]), (y1 + (sy / 2) * revdir[agent[3]][1]), w, h)
+		if (iter_frame != 0) {
+			V.fillRect((x1 + (sx / 2) * revdir[agent[3]][0]), (y1 + (sy / 2) * revdir[agent[3]][1]), w, h)
+			d = frame[i][3]
+			V.strokeStyle='rgba(0,0,0,0.2)';
+			V.fillStyle='rgba(0,0,0,0.2)';
+			V.beginPath();
+			V.moveTo(x1 + w * arrow[d][0][0], y1 + h * arrow[d][0][1])
+			V.lineTo(x1 + w * arrow[d][1][0], y1 + h * arrow[d][1][1])
+			V.lineTo(x1 + w * arrow[d][2][0], y1 + h * arrow[d][2][1])
+			V.closePath();
+			V.stroke();
+		}
 	}
 	function set_color(index, alpha) {
 		V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
@@ -412,6 +401,8 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 </div>
 </body>
 </html>
+
+
 
 
 #            """
