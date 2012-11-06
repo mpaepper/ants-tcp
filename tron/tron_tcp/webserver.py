@@ -186,7 +186,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             self.send_error(500, '%s' % (e,))
             return
         html = """
-
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
@@ -280,7 +279,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			sy = scale;
 			display_width = cols * sx;
 			display_height = rows * sy
-			C.setSize(display_width, display_height); // don't know if this is actually doing anything
+			C.setSize(display_width, display_height); // don't think this is actually doing anything
 //			sx = 600 / width;
 //			sy = 600 / height;
 			//~ for ( i in im ) {
@@ -313,18 +312,12 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					if (frame[i][0] == 'a')
 					{
 						var index = frame[i][4];
-						alpha = 0.6;
-						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
+						alpha = fade(0.4, 0.8, 5, (the_turn - iter_frame))
+						set_color(index, alpha)
 						V.fillRect(x,y,sx,sy);
-						alpha = 0.8;
-						V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
-						x1 = x + sx / 4;
-						y1 = y + sy / 4;
-						w = sx / 2;
-						h = sy / 2;
-						V.fillRect(x1,y1,w,h)
-						if (iter_frame != 0)
-							{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
+						alpha = fade(0.6, 1, 5, (the_turn - iter_frame))
+						set_color(index, alpha)
+						paint_trail(frame[i], x, y)
 					}
 					else if (frame[i][0] == 'd')
 					{
@@ -339,29 +332,12 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						if (iter_frame != 0)
 							{V.fillRect((x1 + (sx / 2) * revdir[frame[i][3]][0]), (y1 + (sy / 2) * revdir[frame[i][3]][1]), w, h)}
 					}
-//					V.strokeStyle = color[index]
-//					V.fillStyle = 'white'
-//					V.strokeStyle = 'white'
-//					V.fillRect(10, 10, 10, 10)
-//					img = frame[i][0] + frame[i][1]
-//					a = frame[i][4]
-//					end_arc = (frame[i][0]=="p" ? (frame[i][4] - (Math.PI * 2 / 3)): 0 )
-//					begin_arc = (frame[i][0]=="p" ? (frame[i][4] + (Math.PI * 2 / 3)): Math.PI * 2 )
-	
-//					r = (frame[i][0]=="b" ? 2 :(frame[i][0]=="p" ? 5 : (frame[i][1]+1)*(frame[i][1]+1)))
-				//~ V.rotate(r)
-				//~ V.translate(x,y)
-//					V.fillText(img, x,y)
-//					V.beginPath();
-//					V.arc(x,y, r*sx,begin_arc,end_arc,true);
-//					V.closePath();
-//					V.stroke();
-				//~ V.translate(-x,-y)
-				//~ if ( im[img] && im[img].data )
-					//~ V.drawImage(im[img], x,y)
-				//~ V.rotate(-r)
 				}
 			}
+			display_scores ()
+		}
+//        }
+	function display_scores () {
 			V.fillStyle = 'white'
 			V.strokeStyle = 'white'
 			info = "turn "+the_turn + "  ["
@@ -372,8 +348,25 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			}
 			info += "]"
 			V.fillText(info, 260,10)
+	}
+	function paint_trail(agent, x, y) {
+		x1 = x + sx / 4;
+		y1 = y + sy / 4;
+		w = sx / 2;
+		h = sy / 2;
+		V.fillRect(x1,y1,w,h)
+		V.fillRect((x1 + (sx / 2) * revdir[agent[3]][0]), (y1 + (sy / 2) * revdir[agent[3]][1]), w, h)
+	}
+	function set_color(index, alpha) {
+		V.fillStyle='rgba(' + color[index][0] + "," + color[index][1] + ',' + color[index][2] + ',' + alpha + ')'
+	}
+	function fade(base, limit, steps, count) {
+		if (count > steps) return base
+		else {
+			stepsize = (limit - base) / steps
+			return limit - (stepsize * count)
 		}
-//        }
+	}
         function stop() {
             clearInterval(tick)
             tick=-1
@@ -419,6 +412,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 </div>
 </body>
 </html>
+
 
 #            """
         self.send_head()
