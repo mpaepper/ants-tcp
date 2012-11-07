@@ -441,7 +441,7 @@ class TCPGameServer(object):
 
     def select_map(self):
         ## try to find a map that does not need more players than available
-        max_players = len(book.players)/2
+        max_players = len(book.players) * 3 / 4
         if max_players < 2:
             max_players = 2
         base_name = random.choice( self.maps.keys() )

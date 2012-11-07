@@ -152,7 +152,9 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 <script type="text/javascript" src="/js/jquery.tablesorter.min.js"></script>
                 """
         head += """</head><body><form action='/search'> &nbsp;&nbsp;&nbsp;
-        <b>
+        <b>"""
+#        <a href='/home'> Home </a> &nbsp;&nbsp;&nbsp;&nbsp;
+        head += """
         <a href='/' name=top> Games </a> &nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/ranking'> Rankings </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <a href='/maps'> Maps </a> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -594,7 +596,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.write(html)
             
     def serve_trondoc(self, match):
-        html = self.header( "HowTo", need_sort=False )
+        html = self.header( "Tron Documentation", need_sort=False )
         html += """
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Here is the documentation for Tron, such as it is right now:<br>
         <pre>""" + open('io_format.txt','r').read() +"</pre>"
@@ -602,6 +604,21 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         html += self.footer()
         html += "</body></html>"
         self.wfile.write(html)
+
+#    def serve_home(self, match):
+#        html = self.header( "AI over TCP", need_sort=False )
+#        domain = "li414-97.members.linode.com"
+#        html += """ 
+#            <p>AI games over TCP:
+#            </p><p><li><a href='""" + domain + """:2084'>Ants beginners</a>
+#            <li><a href='""" + domain + """:2082'>Ants intermediate</a>
+#            <li><a href='""" + domain + """:2080'>Ants free for all</a>
+#            <li><a href='""" + domain + """:2086'>Tron 1v1</a>
+#            <li><a href='""" + domain + """:2088'>Tron multiplayer</a>
+#        """
+#        html += self.footer()
+#        html += "</body></html>"
+#        self.wfile.write(html)
 
     def serve_howto(self, match):
         html = self.header( "HowTo", need_sort=False )
@@ -639,7 +656,6 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_head(mime_type)
         self.wfile.write(self.server.cache[fname] )
         
-        
     def do_GET(self):
                 
         if self.path == '/':
@@ -647,6 +663,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return
             
         for regex, func in (
+#                ('^\/home', self.serve_home),
                 ('^\/ranking/p([0-9]?)', self.serve_ranking),
                 ('^\/ranking', self.serve_ranking),
                 ('^\/howto', self.serve_howto),
