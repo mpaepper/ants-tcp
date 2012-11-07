@@ -607,7 +607,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 #    def serve_home(self, match):
 #        html = self.header( "AI over TCP", need_sort=False )
-#        domain = "li414-97.members.linode.com"
+#        domain = "http://li414-97.members.linode.com"
 #        html += """ 
 #            <p>AI games over TCP:
 #            </p><p><li><a href='""" + domain + """:2084'>Ants beginners</a>
