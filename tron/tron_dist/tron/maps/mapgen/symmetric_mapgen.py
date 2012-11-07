@@ -26,8 +26,8 @@ class SymmetricMap():
     max_players = 10
     min_agents = 1
     max_agents = 6
-    per_player_dim = (10, 50)
-    dim_bounds = (50, 150)
+    per_player_dim = (3, 7)
+    dim_bounds = (30, 70)
     min_start_distance = 20
 
     min_land_proportion = 0.90
@@ -37,7 +37,7 @@ class SymmetricMap():
 
     #map parameters
     no_players = 0
-    agents_per_player = 0
+    agents_per_player = 1
     rows = cols = 0
     row_t = col_t = 0
     water_squares = 0
@@ -78,10 +78,12 @@ class SymmetricMap():
                         self.dim_bounds[0])
                 max_dim = min(self.per_player_dim[1] * no_players,
                         self.dim_bounds[1])
-                self.rows = random.randint(min_dim, max_dim)
+                c_min_dim = min(min_dim, max_dim)
+                c_max_dim = max(min_dim, max_dim)
+                self.rows = random.randint(c_min_dim, c_max_dim)
                 # make maps generally wider than they are tall
-                min_cols = max(min_dim, int(self.rows * 0.80))
-                max_cols = min(max_dim, int(self.rows * 2))
+                min_cols = max(c_min_dim, int(self.rows * 0.80))
+                max_cols = min(c_max_dim, int(self.rows * 2))
                 self.cols = random.randint(min_cols, max_cols)
 
                 if self.rows % no_players == 0 and self.cols % no_players == 0:
@@ -96,7 +98,7 @@ class SymmetricMap():
             while gcd(col_p, no_players) != 1:
                 col_p = random.randint(1, no_players-1)
             self.col_t = (self.cols / no_players) * col_p
-
+#            print self.row_t, self.col_t
             if self.is_valid_start():
                 break
 
@@ -154,7 +156,10 @@ class SymmetricMap():
     def equivalent_squares(self, loc):
         result = []
         for n in range(self.no_players):
-            result.append(self.get_translate_loc(loc))
+            next_loc = self.get_translate_loc(loc)
+            result.append(next_loc)
+            loc = next_loc
+            
         return result
 
     #checks whether the players start far enough apart
