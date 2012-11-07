@@ -28,7 +28,7 @@ class SymmetricMap():
     max_agents = 6
     per_player_dim = (3, 7)
     dim_bounds = (30, 70)
-    min_start_distance = 20
+    min_start_distance = 5
 
     min_land_proportion = 0.90
     max_land_proportion = 0.98
