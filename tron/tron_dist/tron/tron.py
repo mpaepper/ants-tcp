@@ -392,7 +392,7 @@ class Tron(Game):
             if not done:
                 (player_id, row, col, heading) = order
                 for agent in self.agents:
-                    if agent["row"] == row and agent["col"] == col:
+                    if agent["row"] == row and agent["col"] == col and agent["owner"] == player_id:
                         agent["heading"] = heading
 
 #    def unique_location(self, location, unique):
