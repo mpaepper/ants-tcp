@@ -609,6 +609,8 @@ class Tron(Game):
         result.append(['cols', self.cols])
         result.append(['turns', self.turns])
         result.append(['player_seed', self.player_seed])
+        result.append(['num_players', self.num_players])
+        result.append(['agents_per_player', self.agents_per_player])
         for row, col in self.water:
             result.append(['w', row, col])
 #        result.append(['neutral_id', self.neutral_id])
