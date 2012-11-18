@@ -1,0 +1,260 @@
+#!/usr/local/bin/sbcl --script
+;;;; To get yourself a movie:
+;;;; 1. ./playgame.py --verbose --fill --log_input --log_output --log_error --nolaunch --log_dir game_logs --turns 25 --map_file maps/test/test_p02_01.map "python dist/sample_bots/python/LeftyBot.py"
+;;;; 2. bin/bot-input2avi.sbcl game_logs/0.bot0.input
+;;;; 3. ffmpeg -f image2 -i tmp/tmp-%04d.png tmp.mpg
+
+(declaim (optimize (speed 3)))
+
+
+;;; Packages
+
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+(asdf:oos 'asdf:load-op :parse-number)
+
+(asdf:oos 'asdf:load-op :vecto)
+(use-package :vecto)
+
+
+;;; Constants
+
+(defvar +pi/4+ (/ pi 4))
+(defvar +pi/2+ (/ pi 2))
+(defvar +3pi/4+ (/ (* 3 pi) 4))
+(defvar +5pi/4+ (/ (* 5 pi) 4))
+(defvar +3pi/2+ (/ (* 3 pi) 2))
+(defvar +7pi/4+ (/ (* 7 pi) 4))
+(defvar +2pi+ (* 2 pi 4))
+
+
+;;; Globals
+
+(defparameter *asteroid-rotate-inc* 0.05)
+(defparameter *asteroid-step* 0.5)
+(defparameter *asteroid-outline-offsets*
+             (loop with step = *asteroid-step*
+                   for angle from step below (- (* 2 pi) step) by step
+                   collect (- (random 1.0))))
+
+
+;;; Functions
+
+(defun draw-asteroid (x y category heading)
+  (with-graphics-state
+    ;; bounding / 'hit' circle
+    (set-rgb-stroke 0.4 0.4 0.4)
+    (centered-circle-path x y (expt (+ category 1) 2))
+    (stroke)
+    ;; the asteroid
+    (set-rgb-stroke 1 1 1)
+    (loop with radius = (expt (+ category 1) 2)
+          with step = *asteroid-step*
+          initially (move-to radius 0)
+          for angle from step below (- (* 2 pi) step) by step
+          for offset in *asteroid-outline-offsets*
+          for v = (* (+ radius (* offset category)) (cos angle))
+          for w = (* (+ radius (* offset category)) (sin angle))
+          do (line-to v w)
+          finally (close-subpath))
+    (translate x y)
+    (rotate (+ heading *asteroid-rotate-inc*))
+    (stroke)))
+
+
+(defun draw-background (width height)
+  (with-graphics-state
+    (set-rgb-fill 0.2 0.2 0.2)
+    (rectangle 0 0 width height)
+    (fill-path)))
+
+
+(defun draw-bullet (x y)
+  (with-graphics-state
+    (set-rgb-fill 1 1 1)
+    (set-rgb-stroke 1 1 1)
+    (centered-circle-path x y 0.2)
+    (fill-and-stroke)))
+
+
+(defun draw-player (x y heading)
+  (with-graphics-state
+    ;; bounding / 'hit' circle
+    (set-rgb-stroke 0.4 0.4 0.4)
+    (centered-circle-path x y 5)
+    (stroke)
+    ;; the ship
+    (set-rgb-stroke 1 1 1)
+    (translate x y)
+    (move-to 0 5)
+    ;(line-to (* -5 (sin (/ pi 4))) (* -5 (cos (/ pi 4))))
+    (line-to -3.5 -3.5)
+    (line-to 0 -1)
+    (line-to 3.5 -3.5)
+    (line-to 0 5)
+    (rotate (- heading (/ pi 2)))  ; vecto's unit circle is rotated
+    ;(rotate (* -1 (- heading (/ pi 2))))  ; vecto's unit circle is rotated
+    (stroke)))
+
+
+(defun heading2number (heading)
+  (cond ((equal heading "pi/4") +pi/4+)
+        ((equal heading "pi/2") +pi/2+)
+        ((equal heading "3pi/4") +3pi/4+)
+        ((equal heading "pi") pi)
+        ((equal heading "5pi/4") +5pi/4+)
+        ((equal heading "3pi/2") +3pi/2+)
+        ((equal heading "7pi/4") +7pi/4+)
+        ((equal heading "2pi") +2pi+)
+        (t (parse-number:parse-number heading))))
+
+
+(defun make-png (width height asteroids bullets players
+                 &optional (file "tmp.png") (scale 2))
+  (declare (ignore bullets))
+  (with-canvas (:width (* scale width) :height (* scale height))
+    (scale scale scale)
+    (draw-background width height)
+    (loop for a in asteroids
+          for x = (getf a :x)
+          for y = (getf a :y)
+          for c = (getf a :category)
+          for h = (getf a :heading)
+          for r =  (expt (+ c 1) 2)
+          do (draw-asteroid x y c h)
+             (cond ((< x r)
+                    (draw-asteroid (+ width x) y c h))
+                   ((> x (- width r))
+                    (draw-asteroid (- x width) y c h)))
+             (cond ((< y r)
+                    (draw-asteroid x (+ height y) c h))
+                   ((> y (- width r))
+                    (draw-asteroid x (- y height) c h))))
+    (loop for b in bullets
+          for x = (getf b :x)
+          for y = (getf b :y)
+          for r = 1
+          do (draw-bullet x y))
+    (loop with pradius = 5  ; radius of hit bubble
+          for p in players
+          for x = (getf p :x)
+          for y = (getf p :y)
+          for h = (getf p :heading)
+          do (draw-player x y h)
+             (cond ((< x pradius)
+                    (draw-player (+ width x) y h))
+                   ((> x (- width pradius))
+                    (draw-player (- x width) y h)))
+             (cond ((< y pradius)
+                    (draw-player x (+ height y) h))
+                   ((> y (- width pradius))
+                    (draw-player x (- y height) h))))
+    (save-png file)))
+
+
+(defun mkstr (&rest args)
+  (with-output-to-string (s)
+    (dolist (a args)
+      (princ a s))))
+
+
+(defun parse-asteroid (line)
+  (let* ((split (split-string line))
+         (category (parse-number:parse-number (elt split 1)))
+         (x (parse-number:parse-number (elt split 2)))
+         (y (parse-number:parse-number (elt split 3)))
+         (heading (heading2number (elt split 4))))
+    (list :category category :x x :y y :heading heading)))
+
+
+(defun parse-bullet (line)
+  (let* ((split (split-string line))
+         (owner (parse-number:parse-number (elt split 1)))
+         (x (parse-number:parse-number (elt split 2)))
+         (y (parse-number:parse-number (elt split 3)))
+         (heading (heading2number (elt split 4))))
+    (list :owner owner :x x :y y :heading heading)))
+
+
+(defun parse-number (line)
+  (parse-number:parse-number (elt (split-string line) 1)))
+
+
+(defun parse-player (line)
+  (let* ((split (split-string line))
+         (player-id (parse-number:parse-number (elt split 1)))
+         (x (parse-number:parse-number (elt split 2)))
+         (y (parse-number:parse-number (elt split 3)))
+         (heading (heading2number (elt split 4))))
+    (list :id player-id :x x :y y :heading heading)))
+
+
+(defun split-string (string &optional (seperator #\space))
+  (loop with result = nil
+        with value = nil
+        for c across string
+        when (and (char= c seperator) value)
+          do (push (coerce (nreverse value) 'string) result)
+             (setf value nil)
+        when (char/= c seperator)
+          do (push c value)
+        finally (when value
+                  (push (coerce (nreverse value) 'string) result))
+                (return (nreverse result))))
+
+
+(defun starts-with (sequence subsequence)
+  (let ((sublen (length subsequence)))
+    (when (and (> sublen 0)
+               (<= sublen (length sequence)))
+      (equal (subseq sequence 0 sublen) subsequence))))
+
+
+;;; Main Program
+
+(when (<= (length *posix-argv*) 1)
+  (format t "~&Usage: bot-output2avi.sbcl <bot output file>~%")
+  (quit))
+
+(with-open-file (f (merge-pathnames (elt *posix-argv* 1)))
+  (loop with width = 256
+        with height = 256
+        with asteroids = nil
+        with bullets = nil
+        with players = nil
+        with turn = 0
+        with rotate-inc = *asteroid-rotate-inc*
+        for line = (read-line f nil)
+        while line
+        do (cond ((starts-with line "width")
+                  (setf width (parse-number line)))
+                 ((starts-with line "height")
+                  (setf height (parse-number line)))
+                 ((starts-with line "p ")
+                  (push (parse-player line) players))
+                 ((starts-with line "b ")
+                  (push (parse-bullet line) bullets))
+                 ((starts-with line "a ")
+                  (push (parse-asteroid line) asteroids))
+                 ((starts-with line "turn ")
+                  (setf asteroids (nreverse asteroids)
+                        bullets (nreverse  bullets)
+                        players (sort players #'< :key (lambda (a)
+                                                         (getf a :id)))
+                        turn (- (parse-number line) 1))
+                  (unless (or (= turn -1) (= turn 0))
+                    (let ((file (format nil "tmp/tmp-~4,'0D.png" turn)))
+                      (format t "turn ~4,'0D: ~A~%" turn file)
+                      (make-png width height asteroids bullets players file)))
+                  (setf asteroids nil
+                        bullets nil
+                        players nil)
+                  (incf *asteroid-rotate-inc* rotate-inc)))))
+
+;(format t "creating tmp.mp4 from png files...~%")
+;(run-program "ffmpeg" '("-f" "image2" "-i" "tmp/tmp-%04d.png" "tmp.mp4"))
+;(run-program "ffmpeg" '("-f" "image2" "-i" "tmp/tmp-%04d.png" "tmp.mpg"))

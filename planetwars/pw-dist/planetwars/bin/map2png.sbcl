@@ -1,0 +1,171 @@
+#!/usr/local/bin/sbcl --script
+
+;;; Packages
+
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+
+(asdf:oos 'asdf:load-op :parse-number)
+(use-package :parse-number)
+
+
+(asdf:oos 'asdf:load-op :vecto)
+(use-package :vecto)
+
+
+;;; Globals
+
+(defparameter *asteroid-rotate-inc* 0.2)
+(defparameter *asteroid-roughness* 6)
+(defparameter *asteroid-step* 0.5)
+(defparameter *asteroid-outline-offsets*
+             (loop with roughness = *asteroid-roughness*
+                   with step = *asteroid-step*
+                   for angle from step below (- (* 2 pi) step) by step
+                   collect (- (random roughness))))
+
+
+;;; Functions
+
+(defun draw-asteroid (x y category heading)
+  (with-graphics-state
+    ;; bounding / 'hit' circle
+    (set-rgb-stroke 0.4 0.4 0.4)
+    (centered-circle-path x y (expt (+ category 1) 2))
+    (stroke)
+    ;; the asteroid
+    (set-rgb-stroke 1 1 1)
+    (loop with radius = (expt (+ category 1) 2)
+          with step = *asteroid-step*
+          initially (move-to radius 0)
+          for angle from step below (- (* 2 pi) step) by step
+          for offset in *asteroid-outline-offsets*
+          for v = (* (+ radius offset) (cos angle))
+          for w = (* (+ radius offset) (sin angle))
+          do (line-to v w)
+          finally (close-subpath))
+    (translate x y)
+    (rotate (+ heading (incf *asteroid-rotate-inc* 0.2)))
+    (stroke)))
+
+
+(defun draw-background (width height)
+  (with-graphics-state
+    (set-rgb-fill 0.2 0.2 0.2)
+    (rectangle 0 0 width height)
+    (fill-path)))
+
+
+(defun draw-player (x y heading)
+  (with-graphics-state
+    ;; bounding / 'hit' circle
+    (set-rgb-stroke 0.4 0.4 0.4)
+    (centered-circle-path x y 5)
+    (stroke)
+    ;; the ship
+    (set-rgb-stroke 1 1 1)
+    (translate x y)
+    (move-to 0 5)
+    ;(line-to (* -5 (sin (/ pi 4))) (* -5 (cos (/ pi 4))))
+    (line-to -3.5 -3.5)
+    (line-to 0 -1)
+    (line-to 3.5 -3.5)
+    (line-to 0 5)
+    (rotate (- heading (/ pi 2)))  ; vecto's unit circle is rotated
+    ;(rotate (* -1 (- heading (/ pi 2))))  ; vecto's unit circle is rotated
+    (stroke)))
+
+
+(defun mkstr (&rest args)
+  (with-output-to-string (s)
+    (dolist (a args)
+      (princ a s))))
+
+
+(defun split-string (string &optional (seperator #\space))
+  (loop with result = nil
+        with value = nil
+        for c across string
+        when (and (char= c seperator) value)
+          do (push (coerce (nreverse value) 'string) result)
+             (setf value nil)
+        when (char/= c seperator)
+          do (push c value)
+        finally (when value
+                  (push (coerce (nreverse value) 'string) result))
+                (return (nreverse result))))
+
+
+(defun starts-with (sequence subsequence)
+  (let ((sublen (length subsequence)))
+    (when (and (> sublen 0)
+               (<= sublen (length sequence)))
+      (equal (subseq sequence 0 sublen) subsequence))))
+
+
+;;; Main Program
+
+(when (<= (length *posix-argv*) 1)
+  (format t "~&Usage: map2png.sbcl <map file>~%")
+  (quit))
+
+(let (width height players asteroids)
+  (with-open-file (f (merge-pathnames (elt *posix-argv* 1)))
+    (loop for line = (read-line f nil)
+          while line
+          do (cond ((starts-with line "width")
+                    (let ((split (split-string line)))
+                      (setf width (parse-number (elt split 1)))))
+                   ((starts-with line "height")
+                    (let ((split (split-string line)))
+                      (setf height (parse-number (elt split 1)))))
+                   ((starts-with line "p ")
+                    (let* ((split (split-string line))
+                           (pid (parse-number (elt split 1)))
+                           (px (parse-number (elt split 2)))
+                           (py (parse-number (elt split 3)))
+                           (pdir (let ((dir (elt split 4)))
+                                   (cond ((equal dir "pi/4")  (/ pi 4))
+                                         ((equal dir "pi/2")  (/ pi 2))
+                                         ((equal dir "3pi/4") (/ (* 3 pi) 4))
+                                         ((equal dir "pi")    pi)
+                                         ((equal dir "5pi/4") (/ (* 5 pi) 4))
+                                         ((equal dir "3pi/2") (/ (* 3 pi) 2))
+                                         ((equal dir "7pi/4") (/ (* 7 pi) 4))
+                                         ((equal dir "2pi")   (* 2 pi))
+                                         (t (parse-number dir))))))
+                      (push (list :id pid :x px :y py :heading pdir) players)))
+                   ((starts-with line "a ")
+                    (let* ((split (split-string line))
+                           (acat (parse-number (elt split 1)))
+                           (ax (parse-number (elt split 2)))
+                           (ay (parse-number (elt split 3)))
+                           (adir (let ((dir (elt split 4)))
+                                   (cond ((equal dir "pi/4")  (/ pi 4))
+                                         ((equal dir "pi/2")  (/ pi 2))
+                                         ((equal dir "3pi/4") (/ (* 3 pi) 4))
+                                         ((equal dir "pi")    pi)
+                                         ((equal dir "5pi/4") (/ (* 5 pi) 4))
+                                         ((equal dir "3pi/2") (/ (* 3 pi) 2))
+                                         ((equal dir "7pi/4") (/ (* 7 pi) 4))
+                                         ((equal dir "2pi")   (* 2 pi))
+                                         (t (parse-number dir))))))
+                      (push (list :category acat :x ax :y ay :heading adir)
+                            asteroids))))))
+  (setf asteroids (nreverse asteroids))
+  (setf players (sort players #'< :key (lambda (a) (getf a :id))))
+  (format t "~& width: ~A~%height: ~A~%players: ~S~%asteroids: ~S~%"
+          width height players asteroids)
+  (with-canvas (:width (* 2 width) :height (* 2 height))
+    (scale 2 2)
+    (draw-background width height)
+    (loop for a in asteroids
+          do (draw-asteroid (getf a :x) (getf a :y) (getf a :category)
+                            (getf a :heading)))
+    (loop for p in players
+          do (draw-player (getf p :x) (getf p :y) (getf p :heading)))
+    (save-png "tmp.png")))
