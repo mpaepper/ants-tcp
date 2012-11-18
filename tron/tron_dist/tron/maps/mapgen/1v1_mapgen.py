@@ -30,8 +30,8 @@ class SymmetricMap():
     dim_bounds = (30, 70)
     min_start_distance = 5
 
-    min_land_proportion = 0.90
-    max_land_proportion = 0.98
+    min_land_proportion = 0.65
+    max_land_proportion = 0.95
 
     no_extra_walks = 30
 
