@@ -244,8 +244,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	function init() {
 		r_data = replay_data["replaydata"]["data"]
 		playernames = replay_data["playernames"]
-		data =  "player_one=" + playernames[0] + 
-				"player_two=" + playernames[1] +
+		data =  "player_one=" + playernames[0] + "\\n" + "player_two=" + playernames[1] + "\\n" +
 				"playback_string=" + r_data
 	}
 	init()
