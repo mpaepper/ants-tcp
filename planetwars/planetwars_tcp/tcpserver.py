@@ -27,7 +27,7 @@ from time import time,asctime
 import datetime
 
 #from ants import Ants
-from planetwars import Planetwars
+from planetwars import PlanetWars
 from engine import run_game
 
 import game_db
@@ -196,7 +196,7 @@ class TcpGame(threading.Thread):
         self.map_name = map_name
         self.nplayers = nplayers
         self.bots=[]
-        self.planetwars = Planetwars(opts)
+        self.planetwars = PlanetWars(opts)
         
     def __del__(self):
         #~ print "__del__", self.id, self       

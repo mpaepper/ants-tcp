@@ -236,7 +236,7 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 </body>
 </html>
 
-<script>!window.jQuery && document.write('<script src="../visualizer/js/jquery-1.4.2.min.js"><\/script>')</script>
+<script>!window.jQuery && document.write('<script src="/js/jquery-1.4.2.min.js"><\/script>')</script>
   
 <script>
 	replay_data = """ + replaydata + """;
@@ -244,17 +244,14 @@ class AntsHttpHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	function init() {
 		r_data = replay_data["replaydata"]["data"]
 		playernames = replay_data["playernames"]
-		data =  "player_one=" + playernames[0] + "\n" + 
-				"player_two=" + playernames[1] + "\n" +
+		data =  "player_one=" + playernames[0] + 
+				"player_two=" + playernames[1] +
 				"playback_string=" + r_data
 	}
 	init()
 </script>	
 	
-<script src="../visualizer/js/visualizer.js?v=3"> </script>
-
-
-
+<script src="/js/visualizer.js"> </script>
 
 #            """
         self.send_head()
