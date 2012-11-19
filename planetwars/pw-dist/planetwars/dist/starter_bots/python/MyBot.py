@@ -1,58 +1,75 @@
 #!/usr/bin/env python
-from tron import *
+#
 
-# define a class with a do_turn method
-# the Ants.run method will parse and update bot input
-# it will also run the do_turn method for us
-class MyBot:
-    def __init__(self):
-        # define class level variables, will be remembered between turns
-        pass
-    
-    # do_setup is run once at the start of the game
-    # after the bot has received the game settings
-    # the tron class is created and setup by the Ants.run method
-    def do_setup(self, tron):
-        # initialize data structures after learning the game settings
-        pass
-    
-    # do turn is run once per turn
-    # the tron class has the game state and is updated by the Ants.run method
-    # it also has several helper methods to use
-    def do_turn(self, tron):
-        # loop through all my agents and try to give them orders
-        # the ant_loc is an ant location tuple in (row, col) form
-#        print >> sys.stderr, tron.my_agents()
-        for ant_loc in tron.my_agents():
-            # try all directions in given order
-            directions = ('n','e','s','w')
-            for direction in directions:
-                # the destination method will wrap around the map properly
-                # and give us a new (row, col) tuple
-                new_loc = tron.destination(ant_loc, direction)
-                # passable returns true if the location is land
-                if (tron.passable(new_loc)):
-                    # an order is the location of a current ant and a direction
-                    tron.issue_order((ant_loc, direction))
-                    # stop now, don't give 1 ant multiple orders
-                    break
-            # check if we still have time left to calculate more orders
-            if tron.time_remaining() < 10:
-                break
- #       tron.finish_turn()
-            
+"""
+// The DoTurn function is where your code goes. The PlanetWars object contains
+// the state of the game, including information about all planets and fleets
+// that currently exist. Inside this function, you issue orders using the
+// pw.IssueOrder() function. For example, to send 10 ships from planet 3 to
+// planet 8, you would say pw.IssueOrder(3, 8, 10).
+//
+// There is already a basic strategy in place here. You can use it as a
+// starting point, or you can throw it out entirely and replace it with your
+// own. Check out the tutorials and articles on the contest website at
+// http://www.ai-contest.com/resources.
+"""
+
+from PlanetWars import PlanetWars
+
+def DoTurn(pw):
+  # (1) If we currently have a fleet in flight, just do nothing.
+  if len(pw.MyFleets()) >= 1:
+    return
+  # (2) Find my strongest planet.
+  source = -1
+  source_score = -999999.0
+  source_num_ships = 0
+  my_planets = pw.MyPlanets()
+  for p in my_planets:
+    score = float(p.NumShips())
+    if score > source_score:
+      source_score = score
+      source = p.PlanetID()
+      source_num_ships = p.NumShips()
+
+  # (3) Find the weakest enemy or neutral planet.
+  dest = -1
+  dest_score = -999999.0
+  not_my_planets = pw.NotMyPlanets()
+  for p in not_my_planets:
+    score = 1.0 / (1 + p.NumShips())
+    if score > dest_score:
+      dest_score = score
+      dest = p.PlanetID()
+
+  # (4) Send half the ships from my strongest planet to the weakest
+  # planet that I do not own.
+  if source >= 0 and dest >= 0:
+    num_ships = source_num_ships / 2
+    pw.IssueOrder(source, dest, num_ships)
+
+
+def main():
+  map_data = ''
+  while(True):
+    current_line = raw_input()
+    if (len(current_line) >= 2 and current_line.startswith("go") 
+	    or len(current_line) >= 5 and current_line.startswith("ready")):
+      pw = PlanetWars(map_data)
+      DoTurn(pw)
+      pw.FinishTurn()
+      map_data = ''
+    else:
+      map_data += current_line + '\n'
+
+
 if __name__ == '__main__':
-    # psyco will speed up python a little, but is not needed
-    try:
-        import psyco
-        psyco.full()
-    except ImportError:
-        pass
-    
-    try:
-        # if run is passed a class with a do_turn method, it will do the work
-        # this is not needed, in which case you will need to write your own
-        # parsing function and your own game state class
-        Tron.run(MyBot())
-    except KeyboardInterrupt:
-        print('ctrl-c, leaving ...')
+  try:
+    import psyco
+    psyco.full()
+  except ImportError:
+    pass
+  try:
+    main()
+  except KeyboardInterrupt:
+    print 'ctrl-c, leaving ...'
