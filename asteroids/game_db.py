@@ -29,7 +29,7 @@ class GameDB():
 			pass
 			
 	def now(self):
-		return datetime.datetime.now().strftime("%d.%m.%Y %H:%M:%S") #asctime()
+		return datetime.datetime.utcnow().strftime("%d.%m.%Y %H:%M:%S") #asctime()
 
 	def update_defered( self, sql, tup=() ):
 		cur = self.con.cursor()		
